@@ -15,6 +15,7 @@ export default function PublicRegister(): JSX.Element {
   const [birthdayDay, setBirthdayDay] = useState<string>("");
   const [birthdayMonth, setBirthdayMonth] = useState<string>("");
   const [instagramHandle, setInstagramHandle] = useState<string>("");
+  const [birthdayYear, setBirthdayYear] = useState<string>("");
 
   const [loading, setLoading] = useState<boolean>(false);
   const [showModal, setShowModal] = useState<boolean>(false);
@@ -28,51 +29,63 @@ export default function PublicRegister(): JSX.Element {
     // remove tudo que não é número
     const numbers = value.replace(/\D/g, "");
 
-    // 🔥 se o usuário está apagando → não formatar
+    // 🔥 se está apagando → não refazer formatação
     if (value.length < birth.length) {
       setBirth(value);
       setBirthdayDay(numbers.slice(0, 2));
       setBirthdayMonth(numbers.slice(2, 4));
+      setBirthdayYear(numbers.slice(4, 8));
       return;
     }
 
-    // limitar a 4 números
-    const limited = numbers.slice(0, 4);
+    // limite máximo: 8 números (DD MM AAAA)
+    const limited = numbers.slice(0, 8);
 
-    // separa dia e mês
     const day = limited.slice(0, 2);
     const month = limited.slice(2, 4);
+    const year = limited.slice(4, 8);
 
-    // formata para exibir DD/MM
-    const formatted = month ? `${day}/${month}` : day;
+    let formatted = day;
 
-    // atualiza estados
+    if (month) formatted = `${day}/${month}`;
+    if (year) formatted = `${day}/${month}/${year}`;
+
     setBirth(formatted);
     setBirthdayDay(day);
     setBirthdayMonth(month);
+    setBirthdayYear(year);
   }
 
-  function validateAndNormalizeDate(): { day: string; month: string } | null {
-    if (!birthdayDay || !birthdayMonth) {
-      setErrorMessage("Preencha dia e mês do aniversário.");
+  function validateAndNormalizeDate() {
+    if (!birthdayDay || !birthdayMonth || !birthdayYear) {
+      setErrorMessage("Informe dia, mês e ano do aniversário.");
       return null;
     }
 
     const dayNum = Number(birthdayDay);
     const monthNum = Number(birthdayMonth);
+    const yearNum = Number(birthdayYear);
 
-    if (!Number.isInteger(dayNum) || dayNum < 1 || dayNum > 31) {
-      setErrorMessage("Dia inválido. Informe um valor entre 01 e 31.");
-      return null;
-    }
-    if (!Number.isInteger(monthNum) || monthNum < 1 || monthNum > 12) {
-      setErrorMessage("Mês inválido. Informe um valor entre 01 e 12.");
+    if (dayNum < 1 || dayNum > 31) {
+      setErrorMessage("Dia inválido. Use valores entre 01 e 31.");
       return null;
     }
 
-    const day = String(dayNum).padStart(2, "0");
-    const month = String(monthNum).padStart(2, "0");
-    return { day, month };
+    if (monthNum < 1 || monthNum > 12) {
+      setErrorMessage("Mês inválido. Use valores entre 01 e 12.");
+      return null;
+    }
+
+    if (yearNum < 1900 || yearNum > new Date().getFullYear()) {
+      setErrorMessage("Ano inválido.");
+      return null;
+    }
+
+    return {
+      day: String(dayNum).padStart(2, "0"),
+      month: String(monthNum).padStart(2, "0"),
+      year: String(yearNum),
+    };
   }
 
   function handlePhoneChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -103,6 +116,7 @@ export default function PublicRegister(): JSX.Element {
           phone,
           birthday_day: normalized.day,
           birthday_month: normalized.month,
+          birthday_year: normalized.year,
           Instagram: instagramHandle ? [instagramHandle] : [],
         },
       });
@@ -113,6 +127,8 @@ export default function PublicRegister(): JSX.Element {
       setPhone("");
       setBirthdayDay("");
       setBirthdayMonth("");
+      setBirthdayYear("");
+      setBirth("");
       setInstagramHandle("");
 
       setShowModal(true);
