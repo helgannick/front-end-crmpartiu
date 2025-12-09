@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Protected from "@/lib/protected";
 import apiFetch from "@/lib/api";
 import { getToken } from "@/lib/auth";
+import { Users, UserPlus, Calendar } from "lucide-react";
 
 interface Client {
   id: string;
@@ -62,35 +63,43 @@ export default function Dashboard() {
 
   return (
     <Protected>
-      <div className="min-h-screen p-8 bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white">
+      <div className="p-4">
 
-        {/* LOADING SPINNER */}
         {loading && (
-          <div className="flex items-center justify-center h-[70vh]">
-            <div className="w-16 h-16 border-4 border-white/20 border-t-white rounded-full animate-spin" />
+          <div className="flex items-center justify-center h-[70vh] animate-fade-in">
+            <div className="w-14 h-14 border-[4px] border-white/20 border-t-white rounded-full animate-spin"></div>
           </div>
         )}
 
         {!loading && (
           <>
-            <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+            <h1 className="text-4xl font-extrabold mb-8 tracking-tight">
+              Dashboard
+            </h1>
 
-            {/* Cards */}
+           
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
               <Card title="Total de Clientes" value={stats.total} />
               <Card title="Novos na Semana" value={stats.weekly} />
               <Card title="Novos no Mês" value={stats.monthly} />
             </div>
 
-            {/* Grid */}
+           
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
               <Block title="Aniversariantes do Mês">
                 {stats.birthdays.length === 0 && <p>Nenhum aniversariante.</p>}
                 <ul className="space-y-2">
                   {stats.birthdays.map((c) => (
-                    <li key={c.id} className="bg-white/10 rounded p-2">
-                      {c.name} — {c.birthday_day}/{c.birthday_month}
+                    <li
+                      key={c.id}
+                      className="bg-white/10 rounded-lg p-3 flex justify-between items-center
+                        border border-white/10 hover:bg-white/20 transition-all"
+                    >
+                      <span>{c.name}</span>
+                      <span className="opacity-70 text-sm">
+                        {c.birthday_day}/{c.birthday_month}
+                      </span>
                     </li>
                   ))}
                 </ul>
@@ -100,8 +109,13 @@ export default function Dashboard() {
                 {stats.recent.length === 0 && <p>Nenhum cliente recente.</p>}
                 <ul className="space-y-2">
                   {stats.recent.map((c) => (
-                    <li key={c.id} className="bg-white/10 rounded p-2">
-                      {c.name} — {c.email}
+                    <li
+                      key={c.id}
+                      className="bg-white/10 rounded-lg p-3 flex justify-between items-center
+                        border border-white/10 hover:bg-white/20 transition-all"
+                    >
+                      <span>{c.name}</span>
+                      <span className="opacity-70 text-sm">{c.email}</span>
                     </li>
                   ))}
                 </ul>
@@ -116,19 +130,43 @@ export default function Dashboard() {
   );
 }
 
+
 function Card({ title, value }: { title: string; value: number }) {
+  const iconMap: Record<string, JSX.Element> = {
+    "Total de Clientes": <Users className="w-6 h-6" />,
+    "Novos na Semana": <UserPlus className="w-6 h-6" />,
+    "Novos no Mês": <Calendar className="w-6 h-6" />,
+  };
+
   return (
-    <div className="p-6 rounded-2xl bg-white/10 backdrop-blur-xl shadow-xl border border-white/20">
-      <p className="text-sm opacity-80">{title}</p>
-      <h2 className="text-3xl font-bold mt-1">{value}</h2>
+    <div className="p-6 rounded-2xl bg-white/10 backdrop-blur-xl shadow-xl
+      border border-white/20 hover:bg-white/20 transition-all duration-300 
+      cursor-default group">
+
+      <div className="flex items-center justify-between">
+        <p className="text-sm opacity-80">{title}</p>
+        <div className="opacity-60 group-hover:opacity-100 transition">
+          {iconMap[title]}
+        </div>
+      </div>
+
+      <h2 className="text-4xl font-bold mt-2 tracking-tight">
+        {value}
+      </h2>
     </div>
   );
 }
 
+
 function Block({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="p-6 rounded-2xl bg-white/10 backdrop-blur-xl shadow-xl border border-white/20 min-h-[200px]">
-      <h2 className="text-xl font-semibold mb-4">{title}</h2>
+    <div className="p-6 rounded-2xl bg-white/10 backdrop-blur-xl shadow-xl 
+      border border-white/20 min-h-[220px] hover:bg-white/20 transition-all duration-300">
+
+      <h2 className="text-xl font-semibold mb-4 border-b border-white/10 pb-2">
+        {title}
+      </h2>
+
       {children}
     </div>
   );

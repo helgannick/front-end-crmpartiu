@@ -264,7 +264,7 @@ export default function PublicRegister(): JSX.Element {
                 type="text"
                 value={birth}
                 onChange={handleBirthChange}
-                placeholder="Aniversário (DD/MM/AAAA)"
+                placeholder="Aniversário(DD/MM/AA)"
                 maxLength={10}
                 inputMode="numeric"
                 className="w-full p-3 rounded-xl bg-white/10 border border-white/20 backdrop-blur-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30 transition-all"
