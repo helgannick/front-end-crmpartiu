@@ -5,6 +5,8 @@ import Protected from "@/lib/protected";
 import apiFetch from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import { Users, UserPlus, Calendar } from "lucide-react";
+import Header from "@/components/Header";
+
 
 interface Client {
   id: string;
@@ -63,8 +65,8 @@ export default function Dashboard() {
 
   return (
     <Protected>
-      <div className="p-4">
-
+      <Header />
+        <div className="min-h-screen p-8 pt-24 bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white">
         {loading && (
           <div className="flex items-center justify-center h-[70vh] animate-fade-in">
             <div className="w-14 h-14 border-[4px] border-white/20 border-t-white rounded-full animate-spin"></div>

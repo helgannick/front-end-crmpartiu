@@ -1,11 +1,20 @@
-export function getToken() {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem("token");
+export function setToken(token: string) {
+  if (typeof window !== "undefined") {
+    localStorage.setItem("token", token);
+  }
 }
 
-export function setToken(token: string) {
-  if (typeof window === "undefined") return;
-  localStorage.setItem("token", token);
+export function getToken() {
+  if (typeof window !== "undefined") {
+    return localStorage.getItem("token");
+  }
+  return null;
+}
+
+export function clearToken() {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("token");
+  }
 }
 
 export function logout() {
@@ -13,3 +22,4 @@ export function logout() {
   localStorage.removeItem("token");
   window.location.href = "/auth/login";
 }
+
