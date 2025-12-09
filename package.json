@@ -9,7 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@next/font": "^14.2.15",
     "framer-motion": "^12.23.25",
+    "geist": "^1.5.1",
     "lucide-react": "^0.556.0",
     "next": "^15.0.5",
     "react": "18.3.1",
