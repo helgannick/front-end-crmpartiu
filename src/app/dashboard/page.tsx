@@ -29,14 +29,9 @@ export default function Dashboard() {
     inactive: 0,
   });
 
-  useEffect(() => {
-    loadStats();
-  }, []);
-
-  async function loadStats() {
+  const loadStats = async () => {
     try {
       const token = getToken();
-
       const [total, weekly, monthly, birthdays, recent, status] =
         await Promise.all([
           apiFetch("/dashboard/total", { token }),
@@ -56,17 +51,23 @@ export default function Dashboard() {
         active: status.active,
         inactive: status.inactive,
       });
+
     } catch (err) {
       console.error(err);
     }
 
     setLoading(false);
-  }
+  };
+
+  useEffect(() => {
+    loadStats();
+  }, []);
+
 
   return (
     <Protected>
       <Header />
-        <div className="min-h-screen p-8 pt-24 bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white">
+      <div className="min-h-screen p-8 pt-24 bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white">
         {loading && (
           <div className="flex items-center justify-center h-[70vh] animate-fade-in">
             <div className="w-14 h-14 border-[4px] border-white/20 border-t-white rounded-full animate-spin"></div>
@@ -79,14 +80,14 @@ export default function Dashboard() {
               Dashboard
             </h1>
 
-           
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
               <Card title="Total de Clientes" value={stats.total} />
               <Card title="Novos na Semana" value={stats.weekly} />
               <Card title="Novos no Mês" value={stats.monthly} />
             </div>
 
-           
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
               <Block title="Aniversariantes do Mês">
