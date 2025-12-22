@@ -4,9 +4,12 @@ import { useEffect, useState } from "react";
 import Protected from "@/lib/protected";
 import apiFetch from "@/lib/api";
 import { getToken } from "@/lib/auth";
-import { Users, UserPlus, Calendar } from "lucide-react";
 import Header from "@/components/Header";
-
+import DashboardCards from "@/components/DashboardCards";
+import DashboardQuickStats from "@/components/DashboardQuickStats";
+import BirthdayList from "@/components/BirthdayList";
+import RecentClients from "@/components/RecentClients";
+import ClientsByCityChart from "@/components/ClientsByCityChart";
 
 interface Client {
   id: string;
@@ -14,6 +17,12 @@ interface Client {
   email?: string;
   birthday_day?: number;
   birthday_month?: number;
+  birthday_year?: number;
+}
+
+interface CityStats {
+  city: string;
+  total: number;
 }
 
 export default function Dashboard() {
@@ -29,48 +38,88 @@ export default function Dashboard() {
     inactive: 0,
   });
 
+  const [clientsByCity, setClientsByCity] = useState<CityStats[]>([]);
+
   const loadStats = async () => {
     try {
       const token = getToken();
-      const [total, weekly, monthly, birthdays, recent, status] =
-        await Promise.all([
-          apiFetch("/dashboard/total", { token }),
-          apiFetch("/dashboard/week", { token }),
-          apiFetch("/dashboard/month", { token }),
-          apiFetch("/dashboard/birthdays", { token }),
-          apiFetch("/dashboard/recent", { token }),
-          apiFetch("/dashboard/status", { token }),
-        ]);
+
+      const results = await Promise.allSettled([
+        apiFetch("/dashboard/total", { token }),
+        apiFetch("/dashboard/week", { token }),
+        apiFetch("/dashboard/month", { token }),
+        apiFetch("/dashboard/birthdays", { token }),
+        apiFetch("/dashboard/recent", { token }),
+        apiFetch("/dashboard/status", { token }),
+        apiFetch("/dashboard/clients-by-city", { token }),
+      ]);
+
+      const [
+        total,
+        weekly,
+        monthly,
+        birthdays,
+        recent,
+        status,
+        byCity,
+      ] = results.map((r) =>
+        r.status === "fulfilled" ? r.value : null
+      );
 
       setStats({
-        total: total.total,
-        weekly: weekly.new_clients_week,
-        monthly: monthly.new_clients_month,
-        birthdays: birthdays || [],
-        recent: recent || [],
-        active: status.active,
-        inactive: status.inactive,
+        total: total?.total ?? 0,
+        weekly: weekly?.new_clients_week ?? 0,
+        monthly: monthly?.new_clients_month ?? 0,
+        birthdays: Array.isArray(birthdays) ? birthdays : [],
+        recent: Array.isArray(recent) ? recent : [],
+        active: status?.active ?? 0,
+        inactive: status?.inactive ?? 0,
       });
 
-    } catch (err) {
-      console.error(err);
-    }
+      // 🔑 NORMALIZAÇÃO DEFINITIVA DO byCity
+      const normalizedByCity: CityStats[] = (() => {
+        if (Array.isArray(byCity)) return byCity;
+        if (Array.isArray(byCity?.data)) return byCity.data;
+        if (Array.isArray(byCity?.result)) return byCity.result;
+        return [];
+      })();
 
-    setLoading(false);
+      console.log("Clients by city (final):", normalizedByCity);
+
+      setClientsByCity([...normalizedByCity]);
+    } catch (err) {
+      console.error("Erro ao carregar dashboard:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     loadStats();
   }, []);
 
+  const [birthdays, setBirthdays] = useState<BirthdayClient[]>([]);
+
+  const loadBirthdays = async () => {
+    const data = await apiFetch("/clients", {
+      params: { month: new Date().getMonth() + 1 },
+    });
+
+    setBirthdays(data.data);
+  };
+
+  useEffect(() => {
+    loadBirthdays();
+  }, []);
 
   return (
     <Protected>
       <Header />
+
       <div className="min-h-screen p-8 pt-24 bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white">
         {loading && (
-          <div className="flex items-center justify-center h-[70vh] animate-fade-in">
-            <div className="w-14 h-14 border-[4px] border-white/20 border-t-white rounded-full animate-spin"></div>
+          <div className="flex items-center justify-center h-[70vh]">
+            <div className="w-14 h-14 border-[4px] border-white/20 border-t-white rounded-full animate-spin" />
           </div>
         )}
 
@@ -80,97 +129,39 @@ export default function Dashboard() {
               Dashboard
             </h1>
 
-
+            {/* Cards principais */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-              <Card title="Total de Clientes" value={stats.total} />
-              <Card title="Novos na Semana" value={stats.weekly} />
-              <Card title="Novos no Mês" value={stats.monthly} />
+              <DashboardCards
+                total={stats.total}
+                week={stats.weekly}
+                month={stats.monthly}
+              />
             </div>
 
+            {/* Estatísticas rápidas */}
+            <DashboardQuickStats
+              active={stats.active}
+              inactive={stats.inactive}
+              birthdays={stats.birthdays.length}
+              recent={stats.recent.length}
+            />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+              <BirthdayList
+                clients={birthdays}
+                onUpdated={loadBirthdays}
+              />
 
-              <Block title="Aniversariantes do Mês">
-                {stats.birthdays.length === 0 && <p>Nenhum aniversariante.</p>}
-                <ul className="space-y-2">
-                  {stats.birthdays.map((c) => (
-                    <li
-                      key={c.id}
-                      className="bg-white/10 rounded-lg p-3 flex justify-between items-center
-                        border border-white/10 hover:bg-white/20 transition-all"
-                    >
-                      <span>{c.name}</span>
-                      <span className="opacity-70 text-sm">
-                        {c.birthday_day}/{c.birthday_month}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </Block>
+              <RecentClients clients={stats.recent} />
+            </div>
 
-              <Block title="Últimos Cadastrados">
-                {stats.recent.length === 0 && <p>Nenhum cliente recente.</p>}
-                <ul className="space-y-2">
-                  {stats.recent.map((c) => (
-                    <li
-                      key={c.id}
-                      className="bg-white/10 rounded-lg p-3 flex justify-between items-center
-                        border border-white/10 hover:bg-white/20 transition-all"
-                    >
-                      <span>{c.name}</span>
-                      <span className="opacity-70 text-sm">{c.email}</span>
-                    </li>
-                  ))}
-                </ul>
-              </Block>
-
+            {/* Gráficos */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+              <ClientsByCityChart data={clientsByCity} />
             </div>
           </>
         )}
-
       </div>
     </Protected>
-  );
-}
-
-
-function Card({ title, value }: { title: string; value: number }) {
-  const iconMap: Record<string, JSX.Element> = {
-    "Total de Clientes": <Users className="w-6 h-6" />,
-    "Novos na Semana": <UserPlus className="w-6 h-6" />,
-    "Novos no Mês": <Calendar className="w-6 h-6" />,
-  };
-
-  return (
-    <div className="p-6 rounded-2xl bg-white/10 backdrop-blur-xl shadow-xl
-      border border-white/20 hover:bg-white/20 transition-all duration-300 
-      cursor-default group">
-
-      <div className="flex items-center justify-between">
-        <p className="text-sm opacity-80">{title}</p>
-        <div className="opacity-60 group-hover:opacity-100 transition">
-          {iconMap[title]}
-        </div>
-      </div>
-
-      <h2 className="text-4xl font-bold mt-2 tracking-tight">
-        {value}
-      </h2>
-    </div>
-  );
-}
-
-
-function Block({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="p-6 rounded-2xl bg-white/10 backdrop-blur-xl shadow-xl 
-      border border-white/20 min-h-[220px] hover:bg-white/20 transition-all duration-300">
-
-      <h2 className="text-xl font-semibold mb-4 border-b border-white/10 pb-2">
-        {title}
-      </h2>
-
-      {children}
-    </div>
   );
 }
