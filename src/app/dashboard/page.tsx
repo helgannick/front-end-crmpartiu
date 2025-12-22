@@ -11,6 +11,10 @@ import BirthdayList from "@/components/BirthdayList";
 import RecentClients from "@/components/RecentClients";
 import ClientsByCityChart from "@/components/ClientsByCityChart";
 
+/* =======================
+   TIPOS
+======================= */
+
 interface Client {
   id: string;
   name: string;
@@ -20,10 +24,25 @@ interface Client {
   birthday_year?: number;
 }
 
+interface BirthdayClient {
+  id: string;
+  name: string;
+  email?: string;
+  city?: string;
+  phone?: string;
+  birthday_day: number;
+  birthday_month: number;
+  birthday_year: number;
+}
+
 interface CityStats {
   city: string;
   total: number;
 }
+
+/* =======================
+   COMPONENTE
+======================= */
 
 export default function Dashboard() {
   const [loading, setLoading] = useState(true);
@@ -32,7 +51,7 @@ export default function Dashboard() {
     total: 0,
     weekly: 0,
     monthly: 0,
-    birthdays: [] as Client[],
+    birthdays: [] as BirthdayClient[],
     recent: [] as Client[],
     active: 0,
     inactive: 0,
@@ -76,7 +95,6 @@ export default function Dashboard() {
         inactive: status?.inactive ?? 0,
       });
 
-      // 🔑 NORMALIZAÇÃO DEFINITIVA DO byCity
       const normalizedByCity: CityStats[] = (() => {
         if (Array.isArray(byCity)) return byCity;
         if (Array.isArray(byCity?.data)) return byCity.data;
@@ -84,9 +102,7 @@ export default function Dashboard() {
         return [];
       })();
 
-      console.log("Clients by city (final):", normalizedByCity);
-
-      setClientsByCity([...normalizedByCity]);
+      setClientsByCity(normalizedByCity);
     } catch (err) {
       console.error("Erro ao carregar dashboard:", err);
     } finally {
@@ -96,20 +112,6 @@ export default function Dashboard() {
 
   useEffect(() => {
     loadStats();
-  }, []);
-
-  const [birthdays, setBirthdays] = useState<BirthdayClient[]>([]);
-
-  const loadBirthdays = async () => {
-    const data = await apiFetch("/clients", {
-      params: { month: new Date().getMonth() + 1 },
-    });
-
-    setBirthdays(data.data);
-  };
-
-  useEffect(() => {
-    loadBirthdays();
   }, []);
 
   return (
@@ -148,8 +150,8 @@ export default function Dashboard() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
               <BirthdayList
-                clients={birthdays}
-                onUpdated={loadBirthdays}
+                clients={stats.birthdays}
+                onUpdated={loadStats}
               />
 
               <RecentClients clients={stats.recent} />

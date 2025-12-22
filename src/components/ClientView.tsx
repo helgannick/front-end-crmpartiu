@@ -6,9 +6,9 @@ type Client = {
   email?: string;
   city?: string;
   phone?: string;
-  birthday_day: number;
-  birthday_month: number;
-  birthday_year: number;
+  birthday_day?: number;
+  birthday_month?: number;
+  birthday_year?: number;
 };
 
 export default function ClientView({
@@ -18,12 +18,23 @@ export default function ClientView({
   client: Client;
   onEdit: () => void;
 }) {
+  const hasBirthday =
+    client.birthday_day &&
+    client.birthday_month &&
+    client.birthday_year;
+
   return (
     <>
       <h2 className="text-2xl font-bold mb-4">{client.name}</h2>
 
       <div className="space-y-2 text-sm opacity-90">
-        <p>🎂 {client.birthday_day}/{client.birthday_month}/{client.birthday_year}</p>
+        <p>
+          🎂{" "}
+          {hasBirthday
+            ? `${client.birthday_day}/${client.birthday_month}/${client.birthday_year}`
+            : "//"}
+        </p>
+
         {client.email && <p>📧 {client.email}</p>}
         {client.city && <p>📍 {client.city}</p>}
         {client.phone && <p>📱 {client.phone}</p>}

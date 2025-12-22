@@ -4,21 +4,21 @@ import { useState } from "react";
 import ClientView from "./ClientView";
 import ClientEditForm from "./ClientEditForm";
 
-type Client = {
+export type Client = {
   id: string;
   name: string;
   email?: string;
   city?: string;
   phone?: string;
-  birthday_day: number;
-  birthday_month: number;
-  birthday_year: number;
+  birthday_day?: number;
+  birthday_month?: number;
+  birthday_year?: number;
 };
 
 type ClientModalProps = {
   client: Client | null;
   onClose: () => void;
-  onUpdated?: () => void; 
+  onUpdated?: () => void;
 };
 
 export default function ClientModal({
