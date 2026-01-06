@@ -2,6 +2,8 @@
 
 import { motion } from "framer-motion";
 import { Users, CalendarDays, BarChart3 } from "lucide-react";
+import Link from "next/link";
+
 
 type DashboardCardsProps = {
   total: number;
@@ -38,12 +40,17 @@ function Card({ title, value, icon, borderColor }: CardProps) {
 export default function DashboardCards({ total, week, month }: DashboardCardsProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
-      <Card
-        title="Total de Clientes"
-        value={total}
-        icon={<Users size={28} className="text-blue-400" />}
-        borderColor="border-blue-500"
-      />
+
+      <Link href="/dashboard/clients" className="block">
+        <div className="cursor-pointer">
+          <Card
+            title="Total de Clientes"
+            value={total}
+            icon={<Users size={28} className="text-blue-400" />}
+            borderColor="border-blue-500"
+          />
+        </div>
+      </Link>
 
       <Card
         title="Clientes Semana"
