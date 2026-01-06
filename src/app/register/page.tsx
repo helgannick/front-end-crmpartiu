@@ -7,6 +7,8 @@ import { apiFetch } from "@/lib/api";
 
 const INSTAGRAM_URL = "https://www.instagram.com/partiupraboa/"; // <- coloque seu perfil aqui
 
+
+
 export default function PublicRegister(): JSX.Element {
   const [name, setName] = useState<string>("");
   const [email, setEmail] = useState<string>("");

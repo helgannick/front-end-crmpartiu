@@ -4,12 +4,14 @@ import { useEffect, useState } from "react";
 import Protected from "@/lib/protected";
 import apiFetch from "@/lib/api";
 import { getToken } from "@/lib/auth";
+
 import Header from "@/components/Header";
 import DashboardCards from "@/components/DashboardCards";
 import DashboardQuickStats from "@/components/DashboardQuickStats";
 import BirthdayList from "@/components/BirthdayList";
 import RecentClients from "@/components/RecentClients";
 import ClientsByCityChart from "@/components/ClientsByCityChart";
+import ClientCreateModal from "@/components/ClientCreateModal";
 
 /* =======================
    TIPOS
@@ -46,6 +48,7 @@ interface CityStats {
 
 export default function Dashboard() {
   const [loading, setLoading] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const [stats, setStats] = useState({
     total: 0,
@@ -127,9 +130,19 @@ export default function Dashboard() {
 
         {!loading && (
           <>
-            <h1 className="text-4xl font-extrabold mb-8 tracking-tight">
-              Dashboard
-            </h1>
+            {/* Header */}
+            <div className="flex items-center justify-between mb-8">
+              <h1 className="text-4xl font-extrabold tracking-tight">
+                Dashboard
+              </h1>
+
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="rounded-lg bg-emerald-600 hover:bg-emerald-700 px-4 py-2 font-semibold"
+              >
+                + Novo cliente
+              </button>
+            </div>
 
             {/* Cards principais */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
@@ -162,6 +175,13 @@ export default function Dashboard() {
               <ClientsByCityChart data={clientsByCity} />
             </div>
           </>
+        )}
+
+        {showCreateModal && (
+          <ClientCreateModal
+            onClose={() => setShowCreateModal(false)}
+            onCreated={loadStats}
+          />
         )}
       </div>
     </Protected>
