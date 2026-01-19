@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@next/font": "^14.2.15",
+    "@supabase/supabase-js": "^2.90.1",
     "@vercel/og": "^0.8.5",
     "framer-motion": "^12.23.25",
     "geist": "^1.5.1",
@@ -21,7 +22,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@types/node": "^20.19.30",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "eslint": "^9",

@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import apiFetch from "@/lib/api";
-import { setToken } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { supabase } from "@/lib/supabaseClient";
+import { setToken } from "@/lib/auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -18,15 +18,25 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await apiFetch("/auth/login", {
-        method: "POST",
-        body: { email, password },
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
 
-      setToken(res.token);
+      console.log("LOGIN DATA:", data);
+      console.log("LOGIN ERROR:", error);
+      console.log("SUPABASE URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
+
+
+      if (error) throw error;
+      if (!data.session) throw new Error("Sessão não criada");
+
+      // 👉 salva token (usado pelo backend)
+      setToken(data.session.access_token);
+
       router.push("/dashboard");
-    } catch (error: any) {
-      alert(error.message || "Erro ao fazer login");
+    } catch (err: any) {
+      alert(err.message || "Erro ao fazer login");
     } finally {
       setLoading(false);
     }
@@ -35,8 +45,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.15),rgba(0,0,0,0.8))] p-4">
       <div className="flex flex-col items-center w-full max-w-md">
-        
-        {/* LOGO */}
+
         <Image
           src="/Logo-Partiu-Pra-Boa-foguete.svg"
           alt="Logo"
@@ -50,7 +59,7 @@ export default function LoginPage() {
           className="
             backdrop-blur-xl bg-white/10 
             p-8 w-full rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.2)]
-            border border-white/20 animate-fadeIn
+            border border-white/20
           "
         >
           <h1 className="text-2xl font-semibold text-center text-white mb-6">
@@ -58,7 +67,6 @@ export default function LoginPage() {
           </h1>
 
           <div className="flex flex-col gap-4">
-            {/* EMAIL */}
             <input
               type="email"
               placeholder="Seu e-mail"
@@ -72,7 +80,6 @@ export default function LoginPage() {
               required
             />
 
-            {/* SENHA */}
             <input
               type="password"
               placeholder="Sua senha"
@@ -86,7 +93,6 @@ export default function LoginPage() {
               required
             />
 
-            {/* BOTÃO */}
             <button
               type="submit"
               disabled={loading}

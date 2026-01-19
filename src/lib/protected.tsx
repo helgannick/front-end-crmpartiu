@@ -1,17 +1,19 @@
 "use client";
-import { getToken } from "@/lib/auth";
-import { useRouter } from "next/navigation";
+
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function Protected({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const token = getToken();
 
   useEffect(() => {
-    if (!token) router.push("/auth/login");
-  }, [token, router]);
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session) {
+        router.push("/auth/login");
+      }
+    });
+  }, [router]);
 
-  if (!token) return <div>Carregando...</div>;
-
-  return children;
+  return <>{children}</>;
 }
