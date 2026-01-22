@@ -8,6 +8,15 @@ type Props = {
   onCreated: () => void;
 };
 
+const MUSIC_OPTIONS = [
+  "pagode",
+  "funk",
+  "samba",
+  "sertanejo",
+  "e-music",
+  "axe",
+];
+
 export default function ClientCreateModal({ onClose, onCreated }: Props) {
   const [form, setForm] = useState({
     name: "",
@@ -17,9 +26,28 @@ export default function ClientCreateModal({ onClose, onCreated }: Props) {
     birthday_day: "",
     birthday_month: "",
     birthday_year: "",
+
+    lead_source: "",
+    favorite_event: "",
+    last_event: "",
+    bought_with_partiu: false,
+    music_genres: [] as string[],
+    music_genre_other: "",
+
+    // ✅ novo campo
+    gender: "",
   });
 
   const [loading, setLoading] = useState(false);
+
+  function toggleGenre(genre: string) {
+    setForm((prev) => ({
+      ...prev,
+      music_genres: prev.music_genres.includes(genre)
+        ? prev.music_genres.filter((g) => g !== genre)
+        : [...prev.music_genres, genre],
+    }));
+  }
 
   async function handleCreate() {
     try {
@@ -54,7 +82,7 @@ export default function ClientCreateModal({ onClose, onCreated }: Props) {
       />
 
       {/* Modal */}
-      <div className="relative z-10 w-full max-w-md rounded-2xl bg-gray-900 border border-white/10 shadow-xl p-6 text-white">
+      <div className="relative z-10 w-full max-w-md rounded-2xl bg-gray-900 border border-white/10 shadow-xl p-6 text-white overflow-y-auto max-h-[90vh]">
         <h2 className="text-2xl font-bold mb-5">Novo cliente</h2>
 
         <div className="space-y-3">
@@ -80,12 +108,24 @@ export default function ClientCreateModal({ onClose, onCreated }: Props) {
           />
 
           <input
-            placeholder="Telefone"
+            placeholder="Telefone / WhatsApp"
             className="w-full rounded-lg bg-black/30 border border-white/10 p-2"
             value={form.phone}
             onChange={(e) => setForm({ ...form, phone: e.target.value })}
           />
 
+          {/* ✅ Gênero */}
+          <select
+            className="w-full rounded-lg bg-black/30 border border-white/10 p-2"
+            value={form.gender}
+            onChange={(e) => setForm({ ...form, gender: e.target.value })}
+          >
+            <option value="">Gênero</option>
+            <option value="Masculino">Masculino</option>
+            <option value="Feminino">Feminino</option>
+          </select>
+
+          {/* Aniversário */}
           <div className="grid grid-cols-3 gap-2">
             <input
               placeholder="Dia"
@@ -112,6 +152,79 @@ export default function ClientCreateModal({ onClose, onCreated }: Props) {
               }
             />
           </div>
+
+          {/* Origem */}
+          <select
+            className="w-full rounded-lg bg-black/30 border border-white/10 p-2"
+            value={form.lead_source}
+            onChange={(e) =>
+              setForm({ ...form, lead_source: e.target.value })
+            }
+          >
+            <option label="Origem do lead"></option>
+            <option value="Instagram">Instagram</option>
+            <option value="Evento">Evento</option>
+            <option value="Cupom">Cupom</option>
+            <option value="Grupo WhatsApp">Grupo WhatsApp</option>
+            <option value="Outro">Outro</option>
+          </select>
+
+          <input
+            placeholder="Evento favorito"
+            className="w-full rounded-lg bg-black/30 border border-white/10 p-2"
+            value={form.favorite_event}
+            onChange={(e) =>
+              setForm({ ...form, favorite_event: e.target.value })
+            }
+          />
+
+          <input
+            placeholder="Último evento que foi"
+            className="w-full rounded-lg bg-black/30 border border-white/10 p-2"
+            value={form.last_event}
+            onChange={(e) => setForm({ ...form, last_event: e.target.value })}
+          />
+
+          {/* Gêneros musicais */}
+          <div className="space-y-1">
+            <p className="text-sm opacity-70">Gêneros musicais</p>
+            <div className="flex flex-wrap gap-2">
+              {MUSIC_OPTIONS.map((g) => (
+                <button
+                  key={g}
+                  type="button"
+                  onClick={() => toggleGenre(g)}
+                  className={`px-3 py-1 rounded-full text-xs border transition ${
+                    form.music_genres.includes(g)
+                      ? "bg-blue-600 border-blue-500"
+                      : "border-white/20 hover:bg-white/10"
+                  }`}
+                >
+                  {g}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <input
+            placeholder="Outro gênero (opcional)"
+            className="w-full rounded-lg bg-black/30 border border-white/10 p-2"
+            value={form.music_genre_other}
+            onChange={(e) =>
+              setForm({ ...form, music_genre_other: e.target.value })
+            }
+          />
+
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={form.bought_with_partiu}
+              onChange={(e) =>
+                setForm({ ...form, bought_with_partiu: e.target.checked })
+              }
+            />
+            Já comprou ingresso com a PARTIU?
+          </label>
         </div>
 
         <div className="flex gap-3 mt-6">

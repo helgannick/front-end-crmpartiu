@@ -1,5 +1,8 @@
 "use client";
 
+import { useState } from "react";
+import apiFetch from "@/lib/api";
+
 type Client = {
   id: string;
   name: string;
@@ -14,14 +17,39 @@ type Client = {
 export default function ClientView({
   client,
   onEdit,
+  onDeleted,
 }: {
   client: Client;
   onEdit: () => void;
+  onDeleted: () => void;
 }) {
+  const [deleting, setDeleting] = useState(false);
+
   const hasBirthday =
     client.birthday_day &&
     client.birthday_month &&
     client.birthday_year;
+
+  async function handleDelete() {
+    const confirmDelete = window.confirm(
+      `Tem certeza que deseja excluir "${client.name}"?\nEssa ação não pode ser desfeita.`
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      setDeleting(true);
+      await apiFetch(`/clients/${client.id}`, {
+        method: "DELETE",
+      });
+
+      onDeleted();
+    } catch (err: any) {
+      alert(err?.message || "Erro ao excluir cliente");
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   return (
     <>
@@ -40,6 +68,7 @@ export default function ClientView({
         {client.phone && <p>📱 {client.phone}</p>}
       </div>
 
+      {/* Ações rápidas */}
       <div className="flex gap-3 mt-6">
         {client.phone && (
           <a
@@ -63,13 +92,26 @@ export default function ClientView({
         )}
       </div>
 
-      <button
-        onClick={onEdit}
-        className="mt-4 w-full rounded-lg bg-blue-600/80
-        hover:bg-blue-600 px-4 py-2 text-sm font-semibold transition"
-      >
-        Editar dados
-      </button>
+      {/* Editar + Excluir */}
+      <div className="flex gap-3 mt-4">
+        <button
+          onClick={onEdit}
+          className="flex-1 rounded-lg bg-blue-600/80
+          hover:bg-blue-600 px-4 py-2 text-sm font-semibold transition"
+        >
+          Editar dados
+        </button>
+
+        <button
+          onClick={handleDelete}
+          disabled={deleting}
+          className="flex-1 rounded-lg bg-red-600/80
+          hover:bg-red-600 px-4 py-2 text-sm font-semibold transition
+          disabled:opacity-50"
+        >
+          {deleting ? "Excluindo..." : "Excluir"}
+        </button>
+      </div>
     </>
   );
 }

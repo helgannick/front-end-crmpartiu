@@ -39,13 +39,18 @@ export default function ClientModal({
       />
 
       {/* Modal */}
-      <div className="relative z-10 w-full max-w-md rounded-2xl bg-gray-900
-        border border-white/10 shadow-xl p-6 text-white">
-
+      <div
+        className="relative z-10 w-full max-w-md rounded-2xl bg-gray-900
+        border border-white/10 shadow-xl p-6 text-white"
+      >
         {!editing ? (
           <ClientView
             client={client}
             onEdit={() => setEditing(true)}
+            onDeleted={() => {
+              onUpdated?.();
+              onClose();
+            }}
           />
         ) : (
           <ClientEditForm
