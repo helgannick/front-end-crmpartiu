@@ -1,37 +1,52 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { apiFetch } from "@/lib/api";
 
-const INSTAGRAM_URL = "https://www.instagram.com/partiupraboa/"; // <- coloque seu perfil aqui
+const INSTAGRAM_URL = "https://www.instagram.com/partiupraboa/";
 
-
+const GENRES = [
+  { key: "pagode", label: "Pagode" },
+  { key: "funk", label: "Funk" },
+  { key: "samba", label: "Samba" },
+  { key: "sertanejo", label: "Sertanejo" },
+  { key: "emusic", label: "E-Music" },
+  { key: "axe", label: "Axé" },
+];
 
 export default function PublicRegister(): JSX.Element {
   const [name, setName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [city, setCity] = useState<string>("");
   const [phone, setPhone] = useState<string>("");
+
   const [birthdayDay, setBirthdayDay] = useState<string>("");
   const [birthdayMonth, setBirthdayMonth] = useState<string>("");
-  const [instagramHandle, setInstagramHandle] = useState<string>("");
   const [birthdayYear, setBirthdayYear] = useState<string>("");
+  const [birth, setBirth] = useState("");
+
+  const [instagramHandle, setInstagramHandle] = useState<string>("");
+
+  // ✅ novos campos
+  const [leadSource, setLeadSource] = useState<string>("");
+  const [favoriteEvent, setFavoriteEvent] = useState<string>("");
+  const [lastEvent, setLastEvent] = useState<string>("");
+
+  const [boughtWithPartiu, setBoughtWithPartiu] = useState<string>("NAO"); // "SIM" | "NAO"
+  const [gender, setGender] = useState<string>(""); // "masculino" | "feminino" | ""
+  const [musicGenres, setMusicGenres] = useState<string[]>([]);
+  const [musicGenreOther, setMusicGenreOther] = useState<string>("");
 
   const [loading, setLoading] = useState<boolean>(false);
   const [showModal, setShowModal] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const [birth, setBirth] = useState("");
-
   function handleBirthChange(e: React.ChangeEvent<HTMLInputElement>) {
     const value = e.target.value;
-
-    // remove tudo que não é número
     const numbers = value.replace(/\D/g, "");
 
-    // 🔥 se está apagando → não refazer formatação
     if (value.length < birth.length) {
       setBirth(value);
       setBirthdayDay(numbers.slice(0, 2));
@@ -40,15 +55,12 @@ export default function PublicRegister(): JSX.Element {
       return;
     }
 
-    // limite máximo: 8 números (DD MM AAAA)
     const limited = numbers.slice(0, 8);
-
     const day = limited.slice(0, 2);
     const month = limited.slice(2, 4);
     const year = limited.slice(4, 8);
 
     let formatted = day;
-
     if (month) formatted = `${day}/${month}`;
     if (year) formatted = `${day}/${month}/${year}`;
 
@@ -72,12 +84,10 @@ export default function PublicRegister(): JSX.Element {
       setErrorMessage("Dia inválido. Use valores entre 01 e 31.");
       return null;
     }
-
     if (monthNum < 1 || monthNum > 12) {
       setErrorMessage("Mês inválido. Use valores entre 01 e 12.");
       return null;
     }
-
     if (yearNum < 1900 || yearNum > new Date().getFullYear()) {
       setErrorMessage("Ano inválido.");
       return null;
@@ -91,14 +101,18 @@ export default function PublicRegister(): JSX.Element {
   }
 
   function handlePhoneChange(e: React.ChangeEvent<HTMLInputElement>) {
-    // Remove tudo que não é número
     let value = e.target.value.replace(/\D/g, "");
-
-    // Limita a 11 dígitos (DDD + número)
     if (value.length > 11) value = value.slice(0, 11);
-
     setPhone(value);
   }
+
+  function toggleGenre(key: string) {
+    setMusicGenres((prev) =>
+      prev.includes(key) ? prev.filter((g) => g !== key) : [...prev, key]
+    );
+  }
+
+  const boughtBoolean = useMemo(() => boughtWithPartiu === "SIM", [boughtWithPartiu]);
 
   async function register(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -120,9 +134,19 @@ export default function PublicRegister(): JSX.Element {
           birthday_month: normalized.month,
           birthday_year: normalized.year,
           Instagram: instagramHandle ? [instagramHandle] : [],
+
+          // ✅ novos campos
+          lead_source: leadSource || null,
+          favorite_event: favoriteEvent || null,
+          last_event: lastEvent || null,
+          bought_with_partiu: boughtBoolean,
+          music_genres: musicGenres,
+          music_genre_other: musicGenreOther || null,
+          gender: gender || null,
         },
       });
 
+      // reset
       setName("");
       setEmail("");
       setCity("");
@@ -132,6 +156,14 @@ export default function PublicRegister(): JSX.Element {
       setBirthdayYear("");
       setBirth("");
       setInstagramHandle("");
+
+      setLeadSource("");
+      setFavoriteEvent("");
+      setLastEvent("");
+      setBoughtWithPartiu("NAO");
+      setGender("");
+      setMusicGenres([]);
+      setMusicGenreOther("");
 
       setShowModal(true);
     } catch (err: unknown) {
@@ -186,8 +218,7 @@ export default function PublicRegister(): JSX.Element {
                   Cadastro realizado 🎉
                 </h3>
                 <p className="text-center text-sm text-gray-700">
-                  Obrigado! Quer receber novidades por lá? Segue a gente no
-                  Instagram.
+                  Obrigado! Quer receber novidades por lá? Segue a gente no Instagram.
                 </p>
 
                 <a
@@ -239,8 +270,7 @@ export default function PublicRegister(): JSX.Element {
             <div className="text-white text-center md:text-left">
               <h1 className="text-2xl font-semibold">Cadastro</h1>
               <p className="mt-1 text-sm text-white/80 max-w-xs">
-                Receba novidades e promoções. Seu aniversário vira motivo de
-                surpresa!
+                Receba novidades e promoções. Seu aniversário vira motivo de surpresa!
               </p>
             </div>
           </div>
@@ -266,7 +296,7 @@ export default function PublicRegister(): JSX.Element {
                 type="text"
                 value={birth}
                 onChange={handleBirthChange}
-                placeholder="Aniversário(DD/MM/AA)"
+                placeholder="Aniversário (DD/MM/AA)"
                 maxLength={10}
                 inputMode="numeric"
                 className="w-full p-3 rounded-xl bg-white/10 border border-white/20 backdrop-blur-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30 transition-all"
@@ -295,13 +325,86 @@ export default function PublicRegister(): JSX.Element {
 
               <input
                 className="w-full p-3 rounded-xl bg-white/10 border border-white/20 backdrop-blur-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30 transition-all"
-                placeholder="Whatsapp (DD + número)"
+                placeholder="Whatsapp"
                 inputMode="tel"
                 value={phone}
                 onChange={handlePhoneChange}
                 required
                 aria-label="Whatsapp"
               />
+
+              {/* ✅ novos campos */}
+              <div className="grid grid-cols-2 gap-3">
+                <select
+                  value={gender}
+                  onChange={(e) => setGender(e.target.value)}
+                  className="w-full p-3 rounded-xl bg-white/10 border border-white/20 backdrop-blur-xl text-white focus:outline-none focus:ring-2 focus:ring-white/30 transition-all"
+                >
+                  <option value="" className="bg-[#0a0a23]">Gênero</option>
+                  <option value="masculino" className="bg-[#0a0a23]">Masculino</option>
+                  <option value="feminino" className="bg-[#0a0a23]">Feminino</option>
+                </select>
+
+                <select
+                  value={boughtWithPartiu}
+                  onChange={(e) => setBoughtWithPartiu(e.target.value)}
+                  className="w-full p-3 rounded-xl bg-white/10 border border-white/20 backdrop-blur-xl text-white focus:outline-none focus:ring-2 focus:ring-white/30 transition-all"
+                >
+                  <option value="NAO" className="bg-[#0a0a23]">Já comprou com a PARTIU?</option>
+                  <option value="SIM" className="bg-[#0a0a23]">Sim</option>
+                  <option value="NAO" className="bg-[#0a0a23]">Não</option>
+                </select>
+              </div>
+
+              <input
+                className="w-full p-3 rounded-xl bg-white/10 border border-white/20 backdrop-blur-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30 transition-all"
+                placeholder="Evento favorito"
+                value={favoriteEvent}
+                onChange={(e) => setFavoriteEvent(e.target.value)}
+                aria-label="Evento favorito"
+              />
+
+              <input
+                className="w-full p-3 rounded-xl bg-white/10 border border-white/20 backdrop-blur-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30 transition-all"
+                placeholder="Último evento que foi"
+                value={lastEvent}
+                onChange={(e) => setLastEvent(e.target.value)}
+                aria-label="Último evento"
+              />
+
+              <div className="rounded-xl bg-white/5 border border-white/10 p-3">
+                <p className="text-xs text-white/70 mb-2">
+                  Gêneros musicais
+                </p>
+
+                <div className="flex flex-wrap gap-2">
+                  {GENRES.map((g) => {
+                    const active = musicGenres.includes(g.key);
+                    return (
+                      <button
+                        type="button"
+                        key={g.key}
+                        onClick={() => toggleGenre(g.key)}
+                        className={`px-3 py-2 rounded-lg text-sm border transition ${
+                          active
+                            ? "bg-white/30 border-white/30"
+                            : "bg-white/10 border-white/20 hover:bg-white/15"
+                        }`}
+                      >
+                        {g.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <input
+                  className="mt-3 w-full p-3 rounded-xl bg-white/10 border border-white/20 backdrop-blur-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30 transition-all"
+                  placeholder="Outros"
+                  value={musicGenreOther}
+                  onChange={(e) => setMusicGenreOther(e.target.value)}
+                  aria-label="Outros gêneros"
+                />
+              </div>
 
               <input
                 className="w-full p-3 rounded-xl bg-white/10 border border-white/20 backdrop-blur-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30 transition-all"
