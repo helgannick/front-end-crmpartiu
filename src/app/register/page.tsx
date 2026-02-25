@@ -5,7 +5,7 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { apiFetch } from "@/lib/api";
 
-const INSTAGRAM_URL = "https://www.instagram.com/partiupraboa/";
+const INSTAGRAM_URL = "https://chat.whatsapp.com/JwQgbVJuz3k1H95Rz4yxcC";
 
 const GENRES = [
   { key: "pagode", label: "Pagode" },
@@ -215,19 +215,21 @@ export default function PublicRegister(): JSX.Element {
                 </div>
 
                 <h3 className="text-lg font-semibold text-center">
-                  Cadastro realizado 🎉
+                  🎉 Cadastro realizado
                 </h3>
                 <p className="text-center text-sm text-gray-700">
-                  Obrigado! Quer receber novidades por lá? Segue a gente no Instagram.
+                  🎖️ Agora você pode fazer parte do grupo EXCLUSIVO de COMPRA & VENDAS da Partiu.
+                  <br />
+                  Obrigado!
                 </p>
 
                 <a
                   href={INSTAGRAM_URL}
                   target="_blank"
                   rel="noreferrer"
-                  className="mt-4 w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-gradient-to-r from-white/40 to-white/10 border border-white/10 shadow hover:opacity-95 text-black font-medium"
+                  className="mt-4 w-full inline-flex items-center justify-center px-4 py-4 rounded-xl bg-[#25D366] hover:bg-[#1ebe5d] text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all"
                 >
-                  Seguir no Instagram
+                  Entrar no Grupo!
                 </a>
 
                 <button
@@ -385,11 +387,10 @@ export default function PublicRegister(): JSX.Element {
                         type="button"
                         key={g.key}
                         onClick={() => toggleGenre(g.key)}
-                        className={`px-3 py-2 rounded-lg text-sm border transition ${
-                          active
+                        className={`px-3 py-2 rounded-lg text-sm border transition ${active
                             ? "bg-white/30 border-white/30"
                             : "bg-white/10 border-white/20 hover:bg-white/15"
-                        }`}
+                          }`}
                       >
                         {g.label}
                       </button>
