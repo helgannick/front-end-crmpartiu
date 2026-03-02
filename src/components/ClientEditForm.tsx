@@ -10,9 +10,7 @@ type Client = {
   city?: string;
   phone?: string;
 
-  birthday_day?: number;
-  birthday_month?: number;
-  birthday_year?: number;
+  birth_date?: string; // ✅ agora é string ISO
 
   lead_source?: string | null;
   favorite_event?: string | null;
@@ -36,15 +34,14 @@ export default function ClientEditForm({
   onSaved: () => void;
   hideActions?: boolean;
 }) {
+
   const [form, setForm] = useState({
     name: client.name || "",
     email: client.email || "",
     city: client.city || "",
     phone: client.phone || "",
 
-    birthday_day: client.birthday_day ? String(client.birthday_day) : "",
-    birthday_month: client.birthday_month ? String(client.birthday_month) : "",
-    birthday_year: client.birthday_year ? String(client.birthday_year) : "",
+    birth_date: client.birth_date || "", // ✅ direto
 
     lead_source: client.lead_source || "",
     favorite_event: client.favorite_event || "",
@@ -64,7 +61,9 @@ export default function ClientEditForm({
       const has = prev.music_genres.includes(genre);
       return {
         ...prev,
-        music_genres: has ? prev.music_genres.filter((g) => g !== genre) : [...prev.music_genres, genre],
+        music_genres: has
+          ? prev.music_genres.filter((g) => g !== genre)
+          : [...prev.music_genres, genre],
       };
     });
   }
@@ -81,9 +80,7 @@ export default function ClientEditForm({
           city: form.city,
           phone: form.phone,
 
-          birthday_day: form.birthday_day ? Number(form.birthday_day) : null,
-          birthday_month: form.birthday_month ? Number(form.birthday_month) : null,
-          birthday_year: form.birthday_year ? Number(form.birthday_year) : null,
+          birth_date: form.birth_date || null, // ✅ backend espera isso
 
           lead_source: form.lead_source || null,
           favorite_event: form.favorite_event || null,
@@ -107,6 +104,7 @@ export default function ClientEditForm({
 
   return (
     <div className="space-y-3">
+
       <input
         placeholder="Nome"
         value={form.name}
@@ -135,29 +133,13 @@ export default function ClientEditForm({
         className="w-full rounded-lg bg-black/30 border border-white/10 p-2"
       />
 
-      <div className="grid grid-cols-3 gap-2">
-        <input
-          placeholder="Dia"
-          value={form.birthday_day}
-          onChange={(e) => setForm({ ...form, birthday_day: e.target.value })}
-          className="rounded-lg bg-black/30 border border-white/10 p-2"
-          inputMode="numeric"
-        />
-        <input
-          placeholder="Mês"
-          value={form.birthday_month}
-          onChange={(e) => setForm({ ...form, birthday_month: e.target.value })}
-          className="rounded-lg bg-black/30 border border-white/10 p-2"
-          inputMode="numeric"
-        />
-        <input
-          placeholder="Ano"
-          value={form.birthday_year}
-          onChange={(e) => setForm({ ...form, birthday_year: e.target.value })}
-          className="rounded-lg bg-black/30 border border-white/10 p-2"
-          inputMode="numeric"
-        />
-      </div>
+      {/* ✅ NOVO CAMPO DE DATA */}
+      <input
+        type="date"
+        value={form.birth_date || ""}
+        onChange={(e) => setForm({ ...form, birth_date: e.target.value })}
+        className="w-full rounded-lg bg-black/30 border border-white/10 p-2"
+      />
 
       <select
         value={form.gender}
@@ -194,7 +176,9 @@ export default function ClientEditForm({
         <input
           type="checkbox"
           checked={form.bought_with_partiu}
-          onChange={(e) => setForm({ ...form, bought_with_partiu: e.target.checked })}
+          onChange={(e) =>
+            setForm({ ...form, bought_with_partiu: e.target.checked })
+          }
         />
         Já comprou com a PARTIU?
       </label>
@@ -211,7 +195,9 @@ export default function ClientEditForm({
                 type="button"
                 onClick={() => toggleGenre(g)}
                 className={`px-3 py-1 rounded-full text-sm border transition ${
-                  active ? "bg-white/20 border-white/30" : "bg-transparent border-white/10 hover:bg-white/10"
+                  active
+                    ? "bg-white/20 border-white/30"
+                    : "bg-transparent border-white/10 hover:bg-white/10"
                 }`}
               >
                 {g}
@@ -223,12 +209,13 @@ export default function ClientEditForm({
         <input
           placeholder="Outros (opcional)"
           value={form.music_genre_other}
-          onChange={(e) => setForm({ ...form, music_genre_other: e.target.value })}
+          onChange={(e) =>
+            setForm({ ...form, music_genre_other: e.target.value })
+          }
           className="mt-3 w-full rounded-lg bg-black/30 border border-white/10 p-2"
         />
       </div>
 
-      {/* botão invisível pra modal acionar */}
       <button
         id="client-edit-submit"
         type="button"

@@ -1,17 +1,21 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { LogOut } from "lucide-react";
 import { clearToken } from "@/lib/auth";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 export default function Header() {
   const router = useRouter();
+  const pathname = usePathname();
 
   function handleLogout() {
     clearToken();
     router.push("/login");
   }
+
+  const isDashboard = pathname === "/dashboard";
 
   return (
     <header
@@ -24,20 +28,24 @@ export default function Header() {
         z-50 shadow-lg
       "
     >
-      <div className="flex items-center gap-3">
-        <Image
-          src="/Logo-Partiu-Pra-Boa-foguete.svg"
-          width={36}
-          height={36}
-          alt="Partiu Logo"
-          className="rounded-full"
-        />
-        <span className="text-lg font-semibold tracking-wide text-white">
-          CRM-PARTIU
-        </span>
+      {/* Lado esquerdo */}
+      <div className="flex items-center gap-6">
+        <Link href="/dashboard" className="flex items-center gap-3">
+          <Image
+            src="/Logo-Partiu-Pra-Boa-foguete.svg"
+            width={36}
+            height={36}
+            alt="Partiu Logo"
+            className="rounded-full"
+          />
+          <span className="text-lg font-semibold tracking-wide text-white">
+            CRM-PARTIU
+          </span>
+        </Link>
+
       </div>
 
-      {/* Botão de logout */}
+      {/* Logout */}
       <button
         onClick={handleLogout}
         className="

@@ -1,5 +1,8 @@
 "use client";
 
+import type { BirthdayClient, Client } from "../../../@/types/client";
+
+
 import { useEffect, useState } from "react";
 import Protected from "@/lib/protected";
 import apiFetch from "@/lib/api";
@@ -17,25 +20,7 @@ import ClientCreateModal from "@/components/ClientCreateModal";
    TIPOS
 ======================= */
 
-interface Client {
-  id: string;
-  name: string;
-  email?: string;
-  birthday_day?: number;
-  birthday_month?: number;
-  birthday_year?: number;
-}
 
-interface BirthdayClient {
-  id: string;
-  name: string;
-  email?: string;
-  city?: string;
-  phone?: string;
-  birthday_day: number;
-  birthday_month: number;
-  birthday_year: number;
-}
 
 interface CityStats {
   city: string;

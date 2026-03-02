@@ -10,11 +10,8 @@ type Client = {
   city?: string;
   phone?: string;
 
-  birthday_day?: number;
-  birthday_month?: number;
-  birthday_year?: number;
+  birth_date?: string | null; // ✅ novo padrão
 
-  // ✅ novos campos
   lead_source?: string | null;
   favorite_event?: string | null;
   last_event?: string | null;
@@ -35,11 +32,14 @@ export default function ClientView({
 }) {
   const [deleting, setDeleting] = useState(false);
 
-  const hasBirthday =
-    client.birthday_day && client.birthday_month && client.birthday_year;
+  const formattedBirthday = client.birth_date
+    ? new Date(client.birth_date).toLocaleDateString("pt-BR")
+    : null;
 
   const genresLabel = (() => {
-    const genres = Array.isArray(client.music_genres) ? client.music_genres : [];
+    const genres = Array.isArray(client.music_genres)
+      ? client.music_genres
+      : [];
     const other = (client.music_genre_other || "").trim();
     const merged = [...genres, ...(other ? [other] : [])]
       .map((s) => String(s).trim())
@@ -70,30 +70,28 @@ export default function ClientView({
 
       <div className="space-y-2 text-sm opacity-90">
         <p>
-          🎂{" "}
-          {hasBirthday
-            ? `${client.birthday_day}/${client.birthday_month}/${client.birthday_year}`
-            : "//"}
+          🎂 {formattedBirthday || "-"}
         </p>
 
         {client.email && <p>📧 {client.email}</p>}
         {client.city && <p>📍 {client.city}</p>}
         {client.phone && <p>📱 {client.phone}</p>}
 
-        {/* ✅ novos campos */}
         {client.gender && <p>🧍 Gênero: {client.gender}</p>}
         {client.lead_source && <p>🧲 Origem: {client.lead_source}</p>}
         {client.favorite_event && <p>⭐ Evento favorito: {client.favorite_event}</p>}
         {client.last_event && <p>🎫 Último evento: {client.last_event}</p>}
 
         {typeof client.bought_with_partiu === "boolean" && (
-          <p>✅ Já comprou com a PARTIU: {client.bought_with_partiu ? "SIM" : "NÃO"}</p>
+          <p>
+            ✅ Já comprou com a PARTIU:{" "}
+            {client.bought_with_partiu ? "SIM" : "NÃO"}
+          </p>
         )}
 
         {genresLabel && <p>🎵 Gêneros: {genresLabel}</p>}
       </div>
 
-      {/* Ações rápidas */}
       <div className="flex gap-3 mt-6">
         {client.phone && (
           <a
@@ -115,7 +113,6 @@ export default function ClientView({
         )}
       </div>
 
-      {/* Editar + Excluir */}
       <div className="flex gap-3 mt-4">
         <button
           onClick={onEdit}

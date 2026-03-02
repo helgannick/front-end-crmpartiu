@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import apiFetch from "@/lib/api";
 
 type Props = {
@@ -8,70 +8,91 @@ type Props = {
   onCreated: () => void;
 };
 
-const MUSIC_OPTIONS = [
-  "pagode",
-  "funk",
-  "samba",
-  "sertanejo",
-  "e-music",
-  "axe",
-];
+interface Genre {
+  id: string;
+  name: string;
+}
 
 export default function ClientCreateModal({ onClose, onCreated }: Props) {
+  const [genresList, setGenresList] = useState<Genre[]>([]);
+
   const [form, setForm] = useState({
-    name: "",
-    email: "",
-    city: "",
-    phone: "",
-    birthday_day: "",
-    birthday_month: "",
-    birthday_year: "",
-
-    lead_source: "",
-    favorite_event: "",
-    last_event: "",
-    bought_with_partiu: false,
-    music_genres: [] as string[],
-    music_genre_other: "",
-
-    // ✅ novo campo
-    gender: "",
-  });
+  name: "",
+  email: "",
+  city: "",
+  phone: "",
+  birthday_day: "",   
+  birthday_month: "",
+  birthday_year: "",
+  lead_source: "",
+  favorite_event: "",
+  last_event: "",
+  bought_with_partiu: false,
+  music_genres: [] as string[],
+  music_genre_other: "",
+  gender: "",
+});
 
   const [loading, setLoading] = useState(false);
 
-  function toggleGenre(genre: string) {
+  useEffect(() => {
+    async function loadGenres() {
+      try {
+        const data = await apiFetch("/music-genres");
+        setGenresList(data || []);
+      } catch (err) {
+        console.error("Erro ao carregar gêneros", err);
+      }
+    }
+    loadGenres();
+  }, []);
+
+  function toggleGenre(id: string) {
     setForm((prev) => ({
       ...prev,
-      music_genres: prev.music_genres.includes(genre)
-        ? prev.music_genres.filter((g) => g !== genre)
-        : [...prev.music_genres, genre],
+      music_genres: prev.music_genres.includes(id)
+        ? prev.music_genres.filter((g) => g !== id)
+        : [...prev.music_genres, id],
     }));
   }
 
   async function handleCreate() {
-    try {
-      setLoading(true);
+  try {
+    setLoading(true);
 
-      await apiFetch("/clients", {
-        method: "POST",
-        body: {
-          ...form,
-          birthday_day: Number(form.birthday_day),
-          birthday_month: Number(form.birthday_month),
-          birthday_year: Number(form.birthday_year),
-        },
-      });
+    // ✅ Monta o birth_date no formato YYYY-MM-DD
+    const day = String(form.birthday_day).padStart(2, "0");
+    const month = String(form.birthday_month).padStart(2, "0");
+    const year = String(form.birthday_year);
+    const birth_date = day && month && year ? `${year}-${month}-${day}` : null;
 
-      onCreated();
-      onClose();
-    } catch (err: any) {
-      console.error(err);
-      alert(err.message || "Erro ao criar cliente");
-    } finally {
-      setLoading(false);
-    }
+    await apiFetch("/clients", {
+      method: "POST",
+      body: {
+        name: form.name,
+        email: form.email,
+        city: form.city,
+        phone: form.phone,
+        gender: form.gender,
+        lead_source: form.lead_source,
+        favorite_event: form.favorite_event,
+        last_event: form.last_event,
+        bought_with_partiu: form.bought_with_partiu,
+        music_genres: form.music_genres,
+        music_genre_other: form.music_genre_other,
+        birth_date, // ✅ envia a data montada corretamente
+      },
+    });
+
+    onCreated();
+    onClose();
+  } catch (err: any) {
+    console.error(err);
+    alert(err.message || "Erro ao criar cliente");
+  } finally {
+    setLoading(false);
   }
+}
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -114,7 +135,6 @@ export default function ClientCreateModal({ onClose, onCreated }: Props) {
             onChange={(e) => setForm({ ...form, phone: e.target.value })}
           />
 
-          {/* ✅ Gênero */}
           <select
             className="w-full rounded-lg bg-black/30 border border-white/10 p-2"
             value={form.gender}
@@ -125,43 +145,33 @@ export default function ClientCreateModal({ onClose, onCreated }: Props) {
             <option value="Feminino">Feminino</option>
           </select>
 
-          {/* Aniversário */}
           <div className="grid grid-cols-3 gap-2">
             <input
               placeholder="Dia"
               className="rounded-lg bg-black/30 border border-white/10 p-2"
               value={form.birthday_day}
-              onChange={(e) =>
-                setForm({ ...form, birthday_day: e.target.value })
-              }
+              onChange={(e) => setForm({ ...form, birthday_day: e.target.value })}
             />
             <input
               placeholder="Mês"
               className="rounded-lg bg-black/30 border border-white/10 p-2"
               value={form.birthday_month}
-              onChange={(e) =>
-                setForm({ ...form, birthday_month: e.target.value })
-              }
+              onChange={(e) => setForm({ ...form, birthday_month: e.target.value })}
             />
             <input
               placeholder="Ano"
               className="rounded-lg bg-black/30 border border-white/10 p-2"
               value={form.birthday_year}
-              onChange={(e) =>
-                setForm({ ...form, birthday_year: e.target.value })
-              }
+              onChange={(e) => setForm({ ...form, birthday_year: e.target.value })}
             />
           </div>
 
-          {/* Origem */}
           <select
             className="w-full rounded-lg bg-black/30 border border-white/10 p-2"
             value={form.lead_source}
-            onChange={(e) =>
-              setForm({ ...form, lead_source: e.target.value })
-            }
+            onChange={(e) => setForm({ ...form, lead_source: e.target.value })}
           >
-            <option label="Origem do lead"></option>
+            <option value="">Origem do lead</option>
             <option value="Instagram">Instagram</option>
             <option value="Evento">Evento</option>
             <option value="Cupom">Cupom</option>
@@ -173,9 +183,7 @@ export default function ClientCreateModal({ onClose, onCreated }: Props) {
             placeholder="Evento favorito"
             className="w-full rounded-lg bg-black/30 border border-white/10 p-2"
             value={form.favorite_event}
-            onChange={(e) =>
-              setForm({ ...form, favorite_event: e.target.value })
-            }
+            onChange={(e) => setForm({ ...form, favorite_event: e.target.value })}
           />
 
           <input
@@ -185,22 +193,22 @@ export default function ClientCreateModal({ onClose, onCreated }: Props) {
             onChange={(e) => setForm({ ...form, last_event: e.target.value })}
           />
 
-          {/* Gêneros musicais */}
+          {/* Gêneros musicais — carregados da API */}
           <div className="space-y-1">
             <p className="text-sm opacity-70">Gêneros musicais</p>
             <div className="flex flex-wrap gap-2">
-              {MUSIC_OPTIONS.map((g) => (
+              {genresList.map((g) => (
                 <button
-                  key={g}
+                  key={g.id}
                   type="button"
-                  onClick={() => toggleGenre(g)}
+                  onClick={() => toggleGenre(g.id)}
                   className={`px-3 py-1 rounded-full text-xs border transition ${
-                    form.music_genres.includes(g)
+                    form.music_genres.includes(g.id)
                       ? "bg-blue-600 border-blue-500"
                       : "border-white/20 hover:bg-white/10"
                   }`}
                 >
-                  {g}
+                  {g.name}
                 </button>
               ))}
             </div>
@@ -210,9 +218,7 @@ export default function ClientCreateModal({ onClose, onCreated }: Props) {
             placeholder="Outro gênero (opcional)"
             className="w-full rounded-lg bg-black/30 border border-white/10 p-2"
             value={form.music_genre_other}
-            onChange={(e) =>
-              setForm({ ...form, music_genre_other: e.target.value })
-            }
+            onChange={(e) => setForm({ ...form, music_genre_other: e.target.value })}
           />
 
           <label className="flex items-center gap-2 text-sm">

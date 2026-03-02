@@ -11,9 +11,7 @@ export type Client = {
   city?: string;
   phone?: string;
 
-  birthday_day?: number;
-  birthday_month?: number;
-  birthday_year?: number;
+  birth_date?: string;
 
   lead_source?: string | null;
   favorite_event?: string | null;

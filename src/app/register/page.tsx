@@ -1,20 +1,17 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { apiFetch } from "@/lib/api";
 
+
 const INSTAGRAM_URL = "https://chat.whatsapp.com/JwQgbVJuz3k1H95Rz4yxcC";
 
-const GENRES = [
-  { key: "pagode", label: "Pagode" },
-  { key: "funk", label: "Funk" },
-  { key: "samba", label: "Samba" },
-  { key: "sertanejo", label: "Sertanejo" },
-  { key: "emusic", label: "E-Music" },
-  { key: "axe", label: "Axé" },
-];
+interface Genre {
+  id: string;
+  name: string;
+}
 
 export default function PublicRegister(): JSX.Element {
   const [name, setName] = useState<string>("");
@@ -42,6 +39,86 @@ export default function PublicRegister(): JSX.Element {
   const [loading, setLoading] = useState<boolean>(false);
   const [showModal, setShowModal] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const [genresList, setGenresList] = useState<Genre[]>([]);
+
+  useEffect(() => {
+    async function loadGenres() {
+      try {
+        const data = await apiFetch("/music-genres");
+        setGenresList(data || []);
+      } catch (err) {
+        console.error("Erro ao carregar gêneros", err);
+      }
+    }
+
+    loadGenres();
+  }, []);
+
+  const boughtBoolean = useMemo(
+    () => boughtWithPartiu === "SIM",
+    [boughtWithPartiu]
+  );
+
+  async function register(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setErrorMessage(null);
+
+    const normalized = validateAndNormalizeDate();
+    if (!normalized) return;
+
+    const birthDate = `${normalized.year}-${normalized.month}-${normalized.day}`;
+
+    setLoading(true);
+    try {
+      await apiFetch("/public/register", {
+        method: "POST",
+        body: {
+          name,
+          email,
+          city,
+          phone,
+          birth_date: birthDate,
+          Instagram: instagramHandle ? [instagramHandle] : [],
+          lead_source: leadSource || null,
+          favorite_event: favoriteEvent || null,
+          last_event: lastEvent || null,
+          bought_with_partiu: boughtBoolean,
+          music_genres: musicGenres,
+          music_genre_other: musicGenreOther || null,
+          gender: gender || null,
+        },
+      });
+
+      // reset campos
+      setName("");
+      setEmail("");
+      setCity("");
+      setPhone("");
+      setBirthdayDay("");
+      setBirthdayMonth("");
+      setBirthdayYear("");
+      setBirth("");
+      setInstagramHandle("");
+      setLeadSource("");
+      setFavoriteEvent("");
+      setLastEvent("");
+      setBoughtWithPartiu("NAO");
+      setGender("");
+      setMusicGenres([]);
+      setMusicGenreOther("");
+      setShowModal(true);
+    } catch (err: unknown) {
+      const message =
+        err && typeof err === "object" && "message" in err
+          ? String((err as { message?: unknown }).message)
+          : "Ocorreu um erro ao cadastrar.";
+      setErrorMessage(message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
 
   function handleBirthChange(e: React.ChangeEvent<HTMLInputElement>) {
     const value = e.target.value;
@@ -106,75 +183,12 @@ export default function PublicRegister(): JSX.Element {
     setPhone(value);
   }
 
-  function toggleGenre(key: string) {
+  function toggleGenre(id: string) {
     setMusicGenres((prev) =>
-      prev.includes(key) ? prev.filter((g) => g !== key) : [...prev, key]
+      prev.includes(id)
+        ? prev.filter((g) => g !== id)
+        : [...prev, id]
     );
-  }
-
-  const boughtBoolean = useMemo(() => boughtWithPartiu === "SIM", [boughtWithPartiu]);
-
-  async function register(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setErrorMessage(null);
-
-    const normalized = validateAndNormalizeDate();
-    if (!normalized) return;
-
-    setLoading(true);
-    try {
-      await apiFetch("/public/register", {
-        method: "POST",
-        body: {
-          name,
-          email,
-          city,
-          phone,
-          birthday_day: normalized.day,
-          birthday_month: normalized.month,
-          birthday_year: normalized.year,
-          Instagram: instagramHandle ? [instagramHandle] : [],
-
-          // ✅ novos campos
-          lead_source: leadSource || null,
-          favorite_event: favoriteEvent || null,
-          last_event: lastEvent || null,
-          bought_with_partiu: boughtBoolean,
-          music_genres: musicGenres,
-          music_genre_other: musicGenreOther || null,
-          gender: gender || null,
-        },
-      });
-
-      // reset
-      setName("");
-      setEmail("");
-      setCity("");
-      setPhone("");
-      setBirthdayDay("");
-      setBirthdayMonth("");
-      setBirthdayYear("");
-      setBirth("");
-      setInstagramHandle("");
-
-      setLeadSource("");
-      setFavoriteEvent("");
-      setLastEvent("");
-      setBoughtWithPartiu("NAO");
-      setGender("");
-      setMusicGenres([]);
-      setMusicGenreOther("");
-
-      setShowModal(true);
-    } catch (err: unknown) {
-      const message =
-        err && typeof err === "object" && "message" in err
-          ? String((err as { message?: unknown }).message)
-          : "Ocorreu um erro ao cadastrar.";
-      setErrorMessage(message);
-    } finally {
-      setLoading(false);
-    }
   }
 
   return (
@@ -380,19 +394,19 @@ export default function PublicRegister(): JSX.Element {
                 </p>
 
                 <div className="flex flex-wrap gap-2">
-                  {GENRES.map((g) => {
-                    const active = musicGenres.includes(g.key);
+                  {genresList.map((g) => {
+                    const active = musicGenres.includes(g.id);
                     return (
                       <button
                         type="button"
-                        key={g.key}
-                        onClick={() => toggleGenre(g.key)}
-                        className={`px-3 py-2 rounded-lg text-sm border transition ${active
-                            ? "bg-white/30 border-white/30"
-                            : "bg-white/10 border-white/20 hover:bg-white/15"
+                        key={g.id}
+                        onClick={() => toggleGenre(g.id)}
+                        className={`px-3 py-1 rounded-full text-sm border transition-all ${active
+                            ? "bg-white text-black border-white font-semibold"
+                            : "bg-white/10 text-white/70 border-white/20 hover:bg-white/20"
                           }`}
                       >
-                        {g.label}
+                        {g.name}
                       </button>
                     );
                   })}

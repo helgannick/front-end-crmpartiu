@@ -16,9 +16,7 @@ type FullClient = {
   email?: string;
   city?: string;
   phone?: string;
-  birthday_day?: number;
-  birthday_month?: number;
-  birthday_year?: number;
+  birth_date?: string;
 };
 
 export default function RecentClients({
