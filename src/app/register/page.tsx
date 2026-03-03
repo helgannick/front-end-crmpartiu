@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { apiFetch } from "@/lib/api";
-
 
 const INSTAGRAM_URL = "https://chat.whatsapp.com/JwQgbVJuz3k1H95Rz4yxcC";
 
@@ -13,35 +12,37 @@ interface Genre {
   name: string;
 }
 
+const currentYear = new Date().getFullYear();
+
 export default function PublicRegister(): JSX.Element {
   const [name, setName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [city, setCity] = useState<string>("");
-  const [phone, setPhone] = useState<string>("");
+  const [cityValid, setCityValid] = useState<boolean>(false);
+  const [citySuggestions, setCitySuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const allCitiesRef = useRef<string[]>([]);
 
+  const [phone, setPhone] = useState<string>("");
   const [birthdayDay, setBirthdayDay] = useState<string>("");
   const [birthdayMonth, setBirthdayMonth] = useState<string>("");
   const [birthdayYear, setBirthdayYear] = useState<string>("");
   const [birth, setBirth] = useState("");
-
   const [instagramHandle, setInstagramHandle] = useState<string>("");
-
-  // ✅ novos campos
   const [leadSource, setLeadSource] = useState<string>("");
   const [favoriteEvent, setFavoriteEvent] = useState<string>("");
   const [lastEvent, setLastEvent] = useState<string>("");
-
-  const [boughtWithPartiu, setBoughtWithPartiu] = useState<string>("NAO"); // "SIM" | "NAO"
-  const [gender, setGender] = useState<string>(""); // "masculino" | "feminino" | ""
+  const [boughtWithPartiu, setBoughtWithPartiu] = useState<string>("NAO");
+  const [gender, setGender] = useState<string>("");
   const [musicGenres, setMusicGenres] = useState<string[]>([]);
   const [musicGenreOther, setMusicGenreOther] = useState<string>("");
-
   const [loading, setLoading] = useState<boolean>(false);
   const [showModal, setShowModal] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
   const [genresList, setGenresList] = useState<Genre[]>([]);
 
+  // Carrega gêneros musicais
   useEffect(() => {
     async function loadGenres() {
       try {
@@ -51,8 +52,23 @@ export default function PublicRegister(): JSX.Element {
         console.error("Erro ao carregar gêneros", err);
       }
     }
-
     loadGenres();
+  }, []);
+
+  // Pré-carrega todas as cidades do IBGE uma única vez
+  useEffect(() => {
+    async function loadCities() {
+      try {
+        const res = await fetch(
+          "https://servicodados.ibge.gov.br/api/v1/localidades/municipios?orderBy=nome"
+        );
+        const data = await res.json();
+        allCitiesRef.current = data.map((m: { nome: string }) => m.nome);
+      } catch (err) {
+        console.error("Erro ao carregar cidades", err);
+      }
+    }
+    loadCities();
   }, []);
 
   const boughtBoolean = useMemo(
@@ -63,6 +79,11 @@ export default function PublicRegister(): JSX.Element {
   async function register(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setErrorMessage(null);
+
+    if (!cityValid) {
+      setErrorMessage("Selecione uma cidade válida da lista.");
+      return;
+    }
 
     const normalized = validateAndNormalizeDate();
     if (!normalized) return;
@@ -94,6 +115,7 @@ export default function PublicRegister(): JSX.Element {
       setName("");
       setEmail("");
       setCity("");
+      setCityValid(false);
       setPhone("");
       setBirthdayDay("");
       setBirthdayMonth("");
@@ -118,7 +140,6 @@ export default function PublicRegister(): JSX.Element {
       setLoading(false);
     }
   }
-
 
   function handleBirthChange(e: React.ChangeEvent<HTMLInputElement>) {
     const value = e.target.value;
@@ -165,7 +186,7 @@ export default function PublicRegister(): JSX.Element {
       setErrorMessage("Mês inválido. Use valores entre 01 e 12.");
       return null;
     }
-    if (yearNum < 1900 || yearNum > new Date().getFullYear()) {
+    if (yearNum < 1900 || yearNum > currentYear) {
       setErrorMessage("Ano inválido.");
       return null;
     }
@@ -185,10 +206,59 @@ export default function PublicRegister(): JSX.Element {
 
   function toggleGenre(id: string) {
     setMusicGenres((prev) =>
-      prev.includes(id)
-        ? prev.filter((g) => g !== id)
-        : [...prev, id]
+      prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id]
     );
+  }
+
+  function handleCityChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = e.target.value;
+    setCity(value);
+    setCityValid(false);
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    if (value.length < 2) {
+      setCitySuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    debounceRef.current = setTimeout(() => {
+      const query = value
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+
+      const filtered = allCitiesRef.current
+        .filter((nome) =>
+          nome
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .includes(query)
+        )
+        .slice(0, 8);
+
+      setCitySuggestions(filtered);
+      setShowSuggestions(filtered.length > 0);
+    }, 150);
+  }
+
+  function selectCity(nome: string) {
+    setCity(nome);
+    setCityValid(true);
+    setCitySuggestions([]);
+    setShowSuggestions(false);
+  }
+
+  function handleCityBlur() {
+    setTimeout(() => {
+      setShowSuggestions(false);
+      if (!cityValid) {
+        setCity("");
+        setCitySuggestions([]);
+      }
+    }, 150);
   }
 
   return (
@@ -232,7 +302,8 @@ export default function PublicRegister(): JSX.Element {
                   🎉 Cadastro realizado
                 </h3>
                 <p className="text-center text-sm text-gray-700">
-                  🎖️ Agora você pode fazer parte do grupo EXCLUSIVO de COMPRA & VENDAS da Partiu.
+                  🎖️ Agora você pode fazer parte do grupo EXCLUSIVO de COMPRA &
+                  VENDAS da Partiu.
                   <br />
                   Obrigado!
                 </p>
@@ -286,7 +357,8 @@ export default function PublicRegister(): JSX.Element {
             <div className="text-white text-center md:text-left">
               <h1 className="text-2xl font-semibold">Cadastro</h1>
               <p className="mt-1 text-sm text-white/80 max-w-xs">
-                Receba novidades e promoções. Seu aniversário vira motivo de surpresa!
+                Receba novidades e promoções. Seu aniversário vira motivo de
+                surpresa!
               </p>
             </div>
           </div>
@@ -312,22 +384,51 @@ export default function PublicRegister(): JSX.Element {
                 type="text"
                 value={birth}
                 onChange={handleBirthChange}
-                placeholder="Aniversário (DD/MM/AA)"
+                placeholder="Aniversário (DD/MM/AAAA)"
                 maxLength={10}
                 inputMode="numeric"
                 className="w-full p-3 rounded-xl bg-white/10 border border-white/20 backdrop-blur-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30 transition-all"
                 required
               />
 
-              <input
-                className="w-full p-3 rounded-xl bg-white/10 border border-white/20 backdrop-blur-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30 transition-all"
-                placeholder="Cidade"
-                type="text"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                required
-                aria-label="Cidade"
-              />
+              {/* Cidade com autocomplete IBGE */}
+              <div className="relative">
+                <input
+                  className={`w-full p-3 rounded-xl bg-white/10 border backdrop-blur-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 transition-all
+                    ${cityValid
+                      ? "border-emerald-500 focus:ring-emerald-500/30"
+                      : "border-white/20 focus:ring-white/30"
+                    }`}
+                  placeholder="Cidade (selecione da lista)"
+                  type="text"
+                  value={city}
+                  onChange={handleCityChange}
+                  onBlur={handleCityBlur}
+                  required
+                  autoComplete="off"
+                  aria-label="Cidade"
+                />
+
+                {city.length > 0 && (
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm">
+                    {cityValid ? "✅" : "⚠️"}
+                  </span>
+                )}
+
+                {showSuggestions && citySuggestions.length > 0 && (
+                  <ul className="absolute z-50 w-full mt-1 rounded-xl bg-[#0a0a23] border border-white/20 shadow-xl max-h-52 overflow-y-auto">
+                    {citySuggestions.map((nome) => (
+                      <li
+                        key={nome}
+                        onMouseDown={() => selectCity(nome)}
+                        className="px-4 py-2 text-white text-sm cursor-pointer hover:bg-white/10 transition-all"
+                      >
+                        {nome}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
 
               <input
                 className="w-full p-3 rounded-xl bg-white/10 border border-white/20 backdrop-blur-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30 transition-all"
@@ -349,7 +450,6 @@ export default function PublicRegister(): JSX.Element {
                 aria-label="Whatsapp"
               />
 
-              {/* ✅ novos campos */}
               <div className="grid grid-cols-2 gap-3">
                 <select
                   value={gender}
@@ -357,8 +457,8 @@ export default function PublicRegister(): JSX.Element {
                   className="w-full p-3 rounded-xl bg-white/10 border border-white/20 backdrop-blur-xl text-white focus:outline-none focus:ring-2 focus:ring-white/30 transition-all"
                 >
                   <option value="" className="bg-[#0a0a23]">Gênero</option>
-                  <option value="masculino" className="bg-[#0a0a23]">Masculino</option>
-                  <option value="feminino" className="bg-[#0a0a23]">Feminino</option>
+                  <option value="Masculino" className="bg-[#0a0a23]">Masculino</option>
+                  <option value="Feminino" className="bg-[#0a0a23]">Feminino</option>
                 </select>
 
                 <select
@@ -389,10 +489,7 @@ export default function PublicRegister(): JSX.Element {
               />
 
               <div className="rounded-xl bg-white/5 border border-white/10 p-3">
-                <p className="text-xs text-white/70 mb-2">
-                  Gêneros musicais
-                </p>
-
+                <p className="text-xs text-white/70 mb-2">Gêneros musicais</p>
                 <div className="flex flex-wrap gap-2">
                   {genresList.map((g) => {
                     const active = musicGenres.includes(g.id);

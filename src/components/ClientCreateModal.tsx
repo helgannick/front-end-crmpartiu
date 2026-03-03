@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import apiFetch from "@/lib/api";
 
 type Props = {
@@ -13,27 +13,33 @@ interface Genre {
   name: string;
 }
 
+const currentYear = new Date().getFullYear();
+
 export default function ClientCreateModal({ onClose, onCreated }: Props) {
   const [genresList, setGenresList] = useState<Genre[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [citySuggestions, setCitySuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [cityValid, setCityValid] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const allCitiesRef = useRef<string[]>([]);
 
   const [form, setForm] = useState({
-  name: "",
-  email: "",
-  city: "",
-  phone: "",
-  birthday_day: "",   
-  birthday_month: "",
-  birthday_year: "",
-  lead_source: "",
-  favorite_event: "",
-  last_event: "",
-  bought_with_partiu: false,
-  music_genres: [] as string[],
-  music_genre_other: "",
-  gender: "",
-});
-
-  const [loading, setLoading] = useState(false);
+    name: "",
+    email: "",
+    city: "",
+    phone: "",
+    birthday_day: "",
+    birthday_month: "",
+    birthday_year: "",
+    lead_source: "",
+    favorite_event: "",
+    last_event: "",
+    bought_with_partiu: false,
+    music_genres: [] as string[],
+    music_genre_other: "",
+    gender: "",
+  });
 
   useEffect(() => {
     async function loadGenres() {
@@ -47,6 +53,22 @@ export default function ClientCreateModal({ onClose, onCreated }: Props) {
     loadGenres();
   }, []);
 
+  // Pré-carrega todas as cidades uma única vez
+  useEffect(() => {
+    async function loadCities() {
+      try {
+        const res = await fetch(
+          "https://servicodados.ibge.gov.br/api/v1/localidades/municipios?orderBy=nome"
+        );
+        const data = await res.json();
+        allCitiesRef.current = data.map((m: { nome: string }) => m.nome);
+      } catch (err) {
+        console.error("Erro ao carregar cidades", err);
+      }
+    }
+    loadCities();
+  }, []);
+
   function toggleGenre(id: string) {
     setForm((prev) => ({
       ...prev,
@@ -57,52 +79,130 @@ export default function ClientCreateModal({ onClose, onCreated }: Props) {
   }
 
   async function handleCreate() {
-  try {
-    setLoading(true);
+    if (!cityValid) {
+      alert("Selecione uma cidade válida da lista.");
+      return;
+    }
 
-    // ✅ Monta o birth_date no formato YYYY-MM-DD
-    const day = String(form.birthday_day).padStart(2, "0");
-    const month = String(form.birthday_month).padStart(2, "0");
-    const year = String(form.birthday_year);
-    const birth_date = day && month && year ? `${year}-${month}-${day}` : null;
+    try {
+      setLoading(true);
 
-    await apiFetch("/clients", {
-      method: "POST",
-      body: {
-        name: form.name,
-        email: form.email,
-        city: form.city,
-        phone: form.phone,
-        gender: form.gender,
-        lead_source: form.lead_source,
-        favorite_event: form.favorite_event,
-        last_event: form.last_event,
-        bought_with_partiu: form.bought_with_partiu,
-        music_genres: form.music_genres,
-        music_genre_other: form.music_genre_other,
-        birth_date, // ✅ envia a data montada corretamente
-      },
-    });
+      const day = String(form.birthday_day).padStart(2, "0");
+      const month = String(form.birthday_month).padStart(2, "0");
+      const year = String(form.birthday_year);
+      const birth_date =
+        day && month && year ? `${year}-${month}-${day}` : null;
 
-    onCreated();
-    onClose();
-  } catch (err: any) {
-    console.error(err);
-    alert(err.message || "Erro ao criar cliente");
-  } finally {
-    setLoading(false);
+      await apiFetch("/clients", {
+        method: "POST",
+        body: {
+          name: form.name,
+          email: form.email,
+          city: form.city,
+          phone: form.phone,
+          gender: form.gender,
+          lead_source: form.lead_source,
+          favorite_event: form.favorite_event,
+          last_event: form.last_event,
+          bought_with_partiu: form.bought_with_partiu,
+          music_genres: form.music_genres,
+          music_genre_other: form.music_genre_other,
+          birth_date,
+        },
+      });
+
+      onCreated();
+      onClose();
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || "Erro ao criar cliente");
+    } finally {
+      setLoading(false);
+    }
   }
-}
+
+  function handleDayChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const val = e.target.value.replace(/\D/g, "").slice(0, 2);
+    const num = Number(val);
+    if (val === "" || (num >= 1 && num <= 31)) {
+      setForm((prev) => ({ ...prev, birthday_day: val }));
+    }
+  }
+
+  function handleMonthChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const val = e.target.value.replace(/\D/g, "").slice(0, 2);
+    const num = Number(val);
+    if (val === "" || (num >= 1 && num <= 12)) {
+      setForm((prev) => ({ ...prev, birthday_month: val }));
+    }
+  }
+
+  function handleYearChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const val = e.target.value.replace(/\D/g, "").slice(0, 4);
+    const num = Number(val);
+    if (val === "" || (num >= 1900 && num <= currentYear)) {
+      setForm((prev) => ({ ...prev, birthday_year: val }));
+    }
+  }
+
+  function handleCityChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = e.target.value;
+    setForm((prev) => ({ ...prev, city: value }));
+    setCityValid(false);
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    if (value.length < 2) {
+      setCitySuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    debounceRef.current = setTimeout(() => {
+      const query = value
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+
+      const filtered = allCitiesRef.current
+        .filter((nome) =>
+          nome
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .includes(query)
+        )
+        .slice(0, 8);
+
+      setCitySuggestions(filtered);
+      setShowSuggestions(filtered.length > 0);
+    }, 150);
+  }
+
+  function selectCity(nome: string) {
+    setForm((prev) => ({ ...prev, city: nome }));
+    setCityValid(true);
+    setCitySuggestions([]);
+    setShowSuggestions(false);
+  }
+
+  function handleCityBlur() {
+    setTimeout(() => {
+      setShowSuggestions(false);
+      if (!cityValid) {
+        setForm((prev) => ({ ...prev, city: "" }));
+        setCitySuggestions([]);
+      }
+    }, 150);
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      {/* Modal */}
       <div className="relative z-10 w-full max-w-md rounded-2xl bg-gray-900 border border-white/10 shadow-xl p-6 text-white overflow-y-auto max-h-[90vh]">
         <h2 className="text-2xl font-bold mb-5">Novo cliente</h2>
 
@@ -121,12 +221,44 @@ export default function ClientCreateModal({ onClose, onCreated }: Props) {
             onChange={(e) => setForm({ ...form, email: e.target.value })}
           />
 
-          <input
-            placeholder="Cidade"
-            className="w-full rounded-lg bg-black/30 border border-white/10 p-2"
-            value={form.city}
-            onChange={(e) => setForm({ ...form, city: e.target.value })}
-          />
+          {/* Cidade com autocomplete IBGE - filtro local */}
+          <div className="relative">
+            <input
+              className={`w-full p-2 rounded-lg bg-black/30 border transition-all text-white placeholder-white/50 focus:outline-none focus:ring-2
+                ${cityValid
+                  ? "border-emerald-500 focus:ring-emerald-500/30"
+                  : "border-white/10 focus:ring-white/30"
+                }`}
+              placeholder="Cidade (selecione da lista)"
+              type="text"
+              value={form.city}
+              onChange={handleCityChange}
+              onBlur={handleCityBlur}
+              required
+              autoComplete="off"
+              aria-label="Cidade"
+            />
+
+            {form.city.length > 0 && (
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm">
+                {cityValid ? "✅" : "⚠️"}
+              </span>
+            )}
+
+            {showSuggestions && citySuggestions.length > 0 && (
+              <ul className="absolute z-50 w-full mt-1 rounded-xl bg-gray-800 border border-white/20 shadow-xl max-h-52 overflow-y-auto">
+                {citySuggestions.map((nome) => (
+                  <li
+                    key={nome}
+                    onMouseDown={() => selectCity(nome)}
+                    className="px-4 py-2 text-white text-sm cursor-pointer hover:bg-white/10 transition-all"
+                  >
+                    {nome}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
 
           <input
             placeholder="Telefone / WhatsApp"
@@ -148,21 +280,27 @@ export default function ClientCreateModal({ onClose, onCreated }: Props) {
           <div className="grid grid-cols-3 gap-2">
             <input
               placeholder="Dia"
+              inputMode="numeric"
+              maxLength={2}
               className="rounded-lg bg-black/30 border border-white/10 p-2"
               value={form.birthday_day}
-              onChange={(e) => setForm({ ...form, birthday_day: e.target.value })}
+              onChange={handleDayChange}
             />
             <input
               placeholder="Mês"
+              inputMode="numeric"
+              maxLength={2}
               className="rounded-lg bg-black/30 border border-white/10 p-2"
               value={form.birthday_month}
-              onChange={(e) => setForm({ ...form, birthday_month: e.target.value })}
+              onChange={handleMonthChange}
             />
             <input
               placeholder="Ano"
+              inputMode="numeric"
+              maxLength={4}
               className="rounded-lg bg-black/30 border border-white/10 p-2"
               value={form.birthday_year}
-              onChange={(e) => setForm({ ...form, birthday_year: e.target.value })}
+              onChange={handleYearChange}
             />
           </div>
 
@@ -193,7 +331,6 @@ export default function ClientCreateModal({ onClose, onCreated }: Props) {
             onChange={(e) => setForm({ ...form, last_event: e.target.value })}
           />
 
-          {/* Gêneros musicais — carregados da API */}
           <div className="space-y-1">
             <p className="text-sm opacity-70">Gêneros musicais</p>
             <div className="flex flex-wrap gap-2">
