@@ -30,19 +30,19 @@ export function usePublicRegister() {
   const [showModal, setShowModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const KNOWN_GENRES: Genre[] = [
-    { id: "eletr", name: "Eletrônico" },
-    { id: "funk", name: "Funk" },
-    { id: "pagod", name: "Pagode" },
-    { id: "serta", name: "Sertanejo" },
-    { id: "trap", name: "Trap" },
-  ];
-  const [genresList, setGenresList] = useState<Genre[]>(KNOWN_GENRES);
+  { id: "eletr", name: "Eletrônico" },
+  { id: "funk",  name: "Funk" },
+  { id: "pagod", name: "Pagode" },
+  { id: "serta", name: "Sertanejo" },
+  { id: "trap",  name: "Trap" },
+];
+const [genresList, setGenresList] = useState<Genre[]>(KNOWN_GENRES);
 
-  useEffect(() => {
-    apiFetch("/music-genres")
-      .then((data) => { if (data?.length) setGenresList(data); })
-      .catch(console.error);
-  }, []);
+useEffect(() => {
+  apiFetch("/music-genres")
+    .then((data) => { if (data?.length) setGenresList(data); })
+    .catch(console.error);
+}, []);
 
   useEffect(() => {
     fetch("https://servicodados.ibge.gov.br/api/v1/localidades/municipios?orderBy=nome")
@@ -91,9 +91,8 @@ export function usePublicRegister() {
           birth_date: `${normalized.year}-${normalized.month}-${normalized.day}`,
           Instagram: instagramHandle ? [instagramHandle] : [],
           lead_source: leadSource || null,
-          favorite_event_id: favoriteEvent || null,
+          favorite_event: favoriteEvent || null,
           last_event: lastEvent || null,
-          other_genre: musicGenreOther || null,
           bought_with_partiu: boughtBoolean,
           music_genres: musicGenres,
           music_genre_other: musicGenreOther || null,
