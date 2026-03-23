@@ -9,17 +9,22 @@ type Client = {
   email?: string;
   city?: string;
   phone?: string;
-
-  birth_date?: string; // ✅ agora é string ISO
-
+  birth_date?: string;
   lead_source?: string | null;
-  favorite_event?: string | null;
-  last_event?: string | null;
+  favorite_event?: { id: string; name: string } | string | null; // ← aqui
+  last_event?: { id: string; name: string } | string | null;     // ← aqui
   bought_with_partiu?: boolean | null;
   music_genres?: string[] | null;
   music_genre_other?: string | null;
   gender?: "Masculino" | "Feminino" | string | null;
+  contacted?: boolean | null;
 };
+
+function toLabel(value: { name: string } | string | null | undefined): string {
+  if (!value) return "";
+  if (typeof value === "object") return value.name;
+  return value;
+}
 
 const GENRE_OPTIONS = ["pagode", "funk", "samba", "sertanejo", "e-music", "axé"] as const;
 
@@ -36,23 +41,19 @@ export default function ClientEditForm({
 }) {
 
   const [form, setForm] = useState({
-    name: client.name || "",
-    email: client.email || "",
-    city: client.city || "",
-    phone: client.phone || "",
-
-    birth_date: client.birth_date || "", // ✅ direto
-
-    lead_source: client.lead_source || "",
-    favorite_event: client.favorite_event || "",
-    last_event: client.last_event || "",
-    bought_with_partiu: !!client.bought_with_partiu,
-
-    music_genres: Array.isArray(client.music_genres) ? client.music_genres : [],
-    music_genre_other: client.music_genre_other || "",
-
-    gender: client.gender || "",
-  });
+  name: client.name || "",
+  email: client.email || "",
+  city: client.city || "",
+  phone: client.phone || "",
+  birth_date: client.birth_date || "",
+  lead_source: client.lead_source || "",
+  favorite_event: toLabel(client.favorite_event), // ← aqui
+  last_event: toLabel(client.last_event),         // ← aqui
+  bought_with_partiu: !!client.bought_with_partiu,
+  music_genres: Array.isArray(client.music_genres) ? client.music_genres : [],
+  music_genre_other: client.music_genre_other || "",
+  gender: client.gender || "",
+});
 
   const [loading, setLoading] = useState(false);
 

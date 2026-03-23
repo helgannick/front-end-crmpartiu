@@ -10,16 +10,15 @@ export type Client = {
   email?: string;
   city?: string;
   phone?: string;
-
   birth_date?: string;
-
   lead_source?: string | null;
-  favorite_event?: string | null;
-  last_event?: string | null;
+  favorite_event?: { id: string; name: string } | string | null; // ← objeto ou string
+  last_event?: { id: string; name: string } | string | null;     // ← objeto ou string
   bought_with_partiu?: boolean | null;
   music_genres?: string[] | null;
   music_genre_other?: string | null;
   gender?: "Masculino" | "Feminino" | string | null;
+  contacted?: boolean | null;
 };
 
 type ClientModalProps = {

@@ -37,6 +37,29 @@ export default function ClientsPage() {
     }
   }
 
+  async function handleToggleContacted(client: Client) {
+    setClients((prev) =>
+      prev.map((c) =>
+        c.id === client.id ? { ...c, contacted: !client.contacted } : c
+      )
+    );
+
+    try {
+      await apiFetch(`/clients/${client.id}`, {
+        method: "PATCH",
+        body: { contacted: !client.contacted },
+      });
+    } catch (err) {
+      console.error("Erro ao atualizar status", err);
+      // ← se der erro, reverte
+      setClients((prev) =>
+        prev.map((c) =>
+          c.id === client.id ? { ...c, contacted: client.contacted } : c
+        )
+      );
+    }
+  }
+
   useEffect(() => {
     loadClients();
   }, [page]);
@@ -55,6 +78,7 @@ export default function ClientsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="flex-1 rounded-xl bg-black/30 border border-white/10 p-3"
+            onKeyDown={(e) => e.key === "Enter" && loadClients()}
           />
 
           <button
@@ -85,6 +109,7 @@ export default function ClientsPage() {
                   <th className="p-3 text-left">Nome</th>
                   <th className="p-3 text-left">Email</th>
                   <th className="p-3 text-left">Cidade</th>
+                  <th className="p-3 text-left">Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -97,6 +122,17 @@ export default function ClientsPage() {
                     <td className="p-3">{client.name}</td>
                     <td className="p-3">{client.email || "-"}</td>
                     <td className="p-3">{client.city || "-"}</td>
+                    <td className="p-3" onClick={(e) => e.stopPropagation()}> {/* ← aqui */}
+                      <button
+                        onClick={() => handleToggleContacted(client)}
+                        className={`px-3 py-1 rounded-full text-xs font-semibold transition ${client.contacted
+                          ? "bg-emerald-600/30 text-emerald-400 hover:bg-emerald-600/50"
+                          : "bg-white/10 text-white/50 hover:bg-white/20"
+                          }`}
+                      >
+                        {client.contacted ? "✅ Contactado" : "⬜ Não contactado"}
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>

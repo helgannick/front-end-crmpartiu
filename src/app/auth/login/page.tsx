@@ -23,11 +23,6 @@ export default function LoginPage() {
         password,
       });
 
-      console.log("LOGIN DATA:", data);
-      console.log("LOGIN ERROR:", error);
-      console.log("SUPABASE URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
-
-
       if (error) throw error;
       if (!data.session) throw new Error("Sessão não criada");
 

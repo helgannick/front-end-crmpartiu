@@ -9,18 +9,23 @@ type Client = {
   email?: string;
   city?: string;
   phone?: string;
-
-  birth_date?: string | null; // ✅ novo padrão
-
+  birth_date?: string | null;
   lead_source?: string | null;
-  favorite_event?: string | null;
-  last_event?: string | null;
+  favorite_event?: { id: string; name: string } | string | null; // ← aqui
+  last_event?: { id: string; name: string } | string | null;     // ← aqui
   bought_with_partiu?: boolean | null;
   music_genres?: string[] | null;
   music_genre_other?: string | null;
   gender?: "Masculino" | "Feminino" | string | null;
+  contacted?: boolean | null;
 };
 
+// helper para extrair o nome seguro
+function toLabel(value: { name: string } | string | null | undefined): string | null {
+  if (!value) return null;
+  if (typeof value === "object") return value.name;
+  return value;
+}
 export default function ClientView({
   client,
   onEdit,
@@ -46,6 +51,10 @@ export default function ClientView({
       .filter(Boolean);
     return merged.length ? merged.join(", ") : null;
   })();
+
+  {typeof client.contacted === "boolean" && (
+  <p>{client.contacted ? "✅ Contactado" : "⬜ Não contactado"}</p>
+)}
 
   async function handleDelete() {
     const confirmDelete = window.confirm(
@@ -79,9 +88,12 @@ export default function ClientView({
 
         {client.gender && <p>🧍 Gênero: {client.gender}</p>}
         {client.lead_source && <p>🧲 Origem: {client.lead_source}</p>}
-        {client.favorite_event && <p>⭐ Evento favorito: {client.favorite_event}</p>}
-        {client.last_event && <p>🎫 Último evento: {client.last_event}</p>}
-
+        {toLabel(client.favorite_event) && (
+          <p>⭐ Evento favorito: {toLabel(client.favorite_event)}</p>
+        )}
+        {toLabel(client.last_event) && (
+          <p>🎫 Último evento: {toLabel(client.last_event)}</p>
+        )}
         {typeof client.bought_with_partiu === "boolean" && (
           <p>
             ✅ Já comprou com a PARTIU:{" "}
@@ -90,6 +102,8 @@ export default function ClientView({
         )}
 
         {genresLabel && <p>🎵 Gêneros: {genresLabel}</p>}
+
+        <p>📞 Status: {client.contacted ? "✅ Contactado" : "⬜ Não contactado"}</p>
       </div>
 
       <div className="flex gap-3 mt-6">

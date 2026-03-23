@@ -1,22 +1,26 @@
 "use client";
 
+import { supabase } from "@/lib/supabaseClient";
+import { LogOut, Loader2 } from "lucide-react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { LogOut } from "lucide-react";
 import { clearToken } from "@/lib/auth";
 import { useRouter, usePathname } from "next/navigation";
 
 export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
+  const [loggingOut, setLoggingOut] = useState(false);
 
-  function handleLogout() {
-    clearToken();
-    router.push("/login");
-  }
 
-  const isDashboard = pathname === "/dashboard";
 
+  async function handleLogout() {
+  setLoggingOut(true);
+  await supabase.auth.signOut()
+  clearToken();
+  router.push("/auth/login");
+}
   return (
     <header
       className="
@@ -48,17 +52,23 @@ export default function Header() {
       {/* Logout */}
       <button
         onClick={handleLogout}
+        disabled={loggingOut}
         className="
-          flex items-center gap-2
-          px-4 py-2
-          bg-white/10 hover:bg-white/20
-          rounded-xl border border-white/10
-          transition-all
-          text-white
-        "
+    flex items-center gap-2
+    px-4 py-2
+    bg-white/10 hover:bg-white/20
+    rounded-xl border border-white/10
+    transition-all
+    text-white
+    disabled:opacity-50
+  "
       >
-        <LogOut size={18} />
-        Sair
+        {loggingOut ? (
+          <Loader2 size={18} className="animate-spin" />
+        ) : (
+          <LogOut size={18} />
+        )}
+        {loggingOut ? "Saindo..." : "Sair"}
       </button>
     </header>
   );
