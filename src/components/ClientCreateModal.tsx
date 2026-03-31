@@ -79,70 +79,74 @@ export default function ClientCreateModal({ onClose, onCreated }: Props) {
   }
 
   async function handleCreate() {
-    if (!cityValid) {
-      alert("Selecione uma cidade válida da lista.");
-      return;
-    }
+  const dayNum = Number(form.birthday_day);
+  const monthNum = Number(form.birthday_month);
+  const yearNum = Number(form.birthday_year);
 
-    try {
-      setLoading(true);
-
-      const day = String(form.birthday_day).padStart(2, "0");
-      const month = String(form.birthday_month).padStart(2, "0");
-      const year = String(form.birthday_year);
-      const birth_date =
-        day && month && year ? `${year}-${month}-${day}` : null;
-
-      await apiFetch("/clients", {
-        method: "POST",
-        body: {
-          name: form.name,
-          email: form.email,
-          city: form.city,
-          phone: form.phone,
-          gender: form.gender,
-          lead_source: form.lead_source,
-          favorite_event: form.favorite_event,
-          last_event: form.last_event,
-          bought_with_partiu: form.bought_with_partiu,
-          music_genres: form.music_genres,
-          music_genre_other: form.music_genre_other,
-          birth_date,
-        },
-      });
-
-      onCreated();
-      onClose();
-    } catch (err: any) {
-      console.error(err);
-      alert(err.message || "Erro ao criar cliente");
-    } finally {
-      setLoading(false);
-    }
+  if (form.birthday_day && (dayNum < 1 || dayNum > 31)) {
+    alert("Dia inválido"); return;
   }
+  if (form.birthday_month && (monthNum < 1 || monthNum > 12)) {
+    alert("Mês inválido"); return;
+  }
+  if (form.birthday_year && (yearNum < 1900 || yearNum > currentYear)) {
+    alert("Ano inválido"); return;
+  }
+  if (!cityValid) {
+    alert("Selecione uma cidade válida da lista.");
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    const dayStr = String(form.birthday_day).padStart(2, "0");
+    const monthStr = String(form.birthday_month).padStart(2, "0");
+    const yearStr = String(form.birthday_year);
+    const birth_date =
+      dayStr && monthStr && yearStr ? `${yearStr}-${monthStr}-${dayStr}` : null;
+
+    await apiFetch("/clients", {
+      method: "POST",
+      body: {
+        name: form.name,
+        email: form.email,
+        city: form.city,
+        phone: form.phone,
+        gender: form.gender,
+        lead_source: form.lead_source,
+        favorite_event: form.favorite_event,
+        last_event: form.last_event,
+        bought_with_partiu: form.bought_with_partiu,
+        music_genres: form.music_genres,
+        music_genre_other: form.music_genre_other,
+        birth_date,
+      },
+    });
+
+    onCreated();
+    onClose();
+  } catch (err: any) {
+    console.error(err);
+    alert(err.message || "Erro ao criar cliente");
+  } finally {
+    setLoading(false);
+  }
+}
 
   function handleDayChange(e: React.ChangeEvent<HTMLInputElement>) {
     const val = e.target.value.replace(/\D/g, "").slice(0, 2);
-    const num = Number(val);
-    if (val === "" || (num >= 1 && num <= 31)) {
-      setForm((prev) => ({ ...prev, birthday_day: val }));
-    }
+    setForm((prev) => ({ ...prev, birthday_day: val }));
   }
 
   function handleMonthChange(e: React.ChangeEvent<HTMLInputElement>) {
     const val = e.target.value.replace(/\D/g, "").slice(0, 2);
-    const num = Number(val);
-    if (val === "" || (num >= 1 && num <= 12)) {
-      setForm((prev) => ({ ...prev, birthday_month: val }));
-    }
+    setForm((prev) => ({ ...prev, birthday_month: val }));
   }
 
   function handleYearChange(e: React.ChangeEvent<HTMLInputElement>) {
     const val = e.target.value.replace(/\D/g, "").slice(0, 4);
-    const num = Number(val);
-    if (val === "" || (num >= 1900 && num <= currentYear)) {
-      setForm((prev) => ({ ...prev, birthday_year: val }));
-    }
+    setForm((prev) => ({ ...prev, birthday_year: val }));
   }
 
   function handleCityChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -339,11 +343,10 @@ export default function ClientCreateModal({ onClose, onCreated }: Props) {
                   key={g.id}
                   type="button"
                   onClick={() => toggleGenre(g.id)}
-                  className={`px-3 py-1 rounded-full text-xs border transition ${
-                    form.music_genres.includes(g.id)
+                  className={`px-3 py-1 rounded-full text-xs border transition ${form.music_genres.includes(g.id)
                       ? "bg-blue-600 border-blue-500"
                       : "border-white/20 hover:bg-white/10"
-                  }`}
+                    }`}
                 >
                   {g.name}
                 </button>
