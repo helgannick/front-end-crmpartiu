@@ -15,6 +15,7 @@ import BirthdayList from "@/components/BirthdayList";
 import RecentClients from "@/components/RecentClients";
 import ClientsByCityChart from "@/components/ClientsByCityChart";
 import ClientCreateModal from "@/components/ClientCreateModal";
+import ImportClientsModal from "@/components/ImportClientsModal";
 
 /* =======================
    TIPOS
@@ -34,6 +35,7 @@ interface CityStats {
 export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
 
   const [stats, setStats] = useState({
     total: 0,
@@ -121,12 +123,21 @@ export default function Dashboard() {
                 Dashboard
               </h1>
 
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="rounded-lg bg-emerald-600 hover:bg-emerald-700 px-4 py-2 font-semibold"
-              >
-                + Novo cliente
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowImportModal(true)}
+                  className="rounded-lg bg-white/10 hover:bg-white/20 px-4 py-2 font-semibold text-sm"
+                >
+                  Importar planilha
+                </button>
+
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="rounded-lg bg-emerald-600 hover:bg-emerald-700 px-4 py-2 font-semibold"
+                >
+                  + Novo cliente
+                </button>
+              </div>
             </div>
 
             {/* Cards principais */}
@@ -166,6 +177,13 @@ export default function Dashboard() {
           <ClientCreateModal
             onClose={() => setShowCreateModal(false)}
             onCreated={loadStats}
+          />
+        )}
+
+        {showImportModal && (
+          <ImportClientsModal
+            onClose={() => setShowImportModal(false)}
+            onImported={loadStats}
           />
         )}
       </div>
