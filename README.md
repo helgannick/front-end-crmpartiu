@@ -176,3 +176,35 @@ useAuthRefresh (a cada 50 min) → refreshToken() →
 - `src/components/TopSourcesPieChart.tsx` — novo
 - `src/components/InactiveClientsList.tsx` — novo
 - `src/components/RetentionCohortHeatmap.tsx` — novo
+
+---
+
+### 2026-04-18 — Testes E2E com Playwright
+
+**Problema:** Sem testes de ponta-a-ponta, regressões na UI passam despercebidas.
+
+**Solução:** 16 testes em 3 specs usando Playwright com mocks de API via `page.route()`.
+
+| Spec | Testes | O que cobre |
+|------|--------|-------------|
+| `auth.spec.ts` | 5 | Login, redirect sem auth, alert de erro, estado de loading |
+| `clients.spec.ts` | 6 | Tabela, estado vazio, busca, modal de criação, modal de importação |
+| `dashboard.spec.ts` | 5 | Título, tabs, métricas, troca de aba avançada |
+
+**Como rodar:**
+```bash
+# Instalar dependências do sistema (uma vez, requer sudo)
+sudo npx playwright install --with-deps chromium
+
+npm run test:e2e           # todos os testes
+npm run test:e2e:ui        # modo interativo
+npm run test:e2e:report    # ver relatório
+```
+
+**Arquivos criados:**
+- `playwright.config.ts` — config com webServer automático
+- `e2e/auth.spec.ts` — testes de autenticação
+- `e2e/clients.spec.ts` — testes de clientes e modais
+- `e2e/dashboard.spec.ts` — testes do dashboard
+- `e2e/helpers/mockApi.ts` — interceptors reutilizáveis para todos os endpoints
+- `e2e/fixtures/clients.csv` — fixture de importação
