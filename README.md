@@ -51,13 +51,26 @@ Logout → logout() → POST /auth/logout →
   → Backend limpa cookie → redirect /auth/login
 ```
 
+### Fluxo de refresh automático
+
+```
+apiFetch() → 401 → refreshToken() → POST /auth/refresh →
+  → ok  → retry da request original
+  → fail → redirect /auth/login
+
+useAuthRefresh (a cada 50 min) → refreshToken() →
+  → fail → redirect /auth/login
+```
+
 ### Arquivos de auth
 
 | Arquivo | Responsabilidade |
 |---------|-----------------|
-| `src/lib/auth.ts` | `login()` e `logout()` — única fonte de verdade para auth |
-| `src/lib/api.ts` | `apiFetch()` — todas as chamadas com `credentials: 'include'` |
+| `src/lib/auth.ts` | `login()`, `logout()`, `refreshToken()` — fonte de verdade para auth |
+| `src/lib/api.ts` | `apiFetch()` — intercepta 401 e renova token automaticamente |
 | `src/lib/protected.tsx` | Wrapper que verifica sessão via `GET /auth/me` |
+| `src/hooks/useAuthRefresh.ts` | Hook que renova token silenciosamente a cada 50 min |
+| `src/components/ClientProviders.tsx` | Client Component que ativa `useAuthRefresh` no layout |
 | `src/components/Header.tsx` | Botão de logout usando `logout()` |
 
 ---
@@ -96,3 +109,23 @@ Logout → logout() → POST /auth/logout →
 - `src/components/Header.tsx`
 - `src/app/dashboard/page.tsx`
 - `src/app/dashboard/clients/page.tsx`
+
+---
+
+### 2026-04-18 — Refresh automático de token JWT
+
+**Problema:** `access_token` expira após ~1h; o usuário era deslogado no meio do uso.
+
+**Solução:**
+- `refreshToken()` adicionado em `lib/auth.ts` — chama `POST /auth/refresh` com `credentials: 'include'`
+- `apiFetch()` em `lib/api.ts` intercepta respostas 401, tenta renovar e faz retry; se falhar, redireciona para login
+- `hooks/useAuthRefresh.ts` — hook que dispara renovação silenciosa a cada 50 min
+- `components/ClientProviders.tsx` — Client Component que usa `useAuthRefresh`; envolve a aplicação no layout
+- `app/layout.tsx` — `children` envolvidos em `<ClientProviders>`
+
+**Arquivos criados/alterados:**
+- `src/lib/auth.ts` — adicionado `refreshToken()`
+- `src/lib/api.ts` — interceptação de 401 + retry
+- `src/hooks/useAuthRefresh.ts` — novo
+- `src/components/ClientProviders.tsx` — novo
+- `src/app/layout.tsx` — usa ClientProviders
