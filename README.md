@@ -149,3 +149,30 @@ useAuthRefresh (a cada 50 min) → refreshToken() →
 - `src/hooks/usePublicRegister.ts` — lógica cache-first substituindo fetch direto
 - `src/components/CityAutocomplete.tsx` — props `cacheSource` e `onRefreshCache`
 - `src/app/register/page.tsx` — passa novos props ao componente
+
+---
+
+### 2026-04-18 — Dashboard de métricas avançadas
+
+**Problema:** Dashboard mostrava apenas totais básicos sem análise de negócio.
+
+**Solução:**
+- Tabs no dashboard: **Visão Geral** / **Conversão** / **Engajamento** / **Retenção**
+- Métricas avançadas carregadas sob demanda (lazy load por tab)
+- Filtro de período para clientes inativos (30/90/180/365 dias)
+- Exportação CSV em "Clientes Inativos" e "Retenção por Coorte"
+
+**Componentes criados:**
+- `ConversionFunnelChart` — BarChart horizontal com taxas de conversão entre estágios
+- `EngagementTrendChart` — LineChart com clientes ativos e média de interações por mês
+- `TopSourcesPieChart` — PieChart/Donut das top 5 origens de leads
+- `InactiveClientsList` — Tabela com badge de dias inativo + exportar CSV
+- `RetentionCohortHeatmap` — Grid colorido (heatmap) de retenção 30/60/90d por coorte
+
+**Arquivos alterados:**
+- `src/app/dashboard/page.tsx` — tabs + lazy load + filtros
+- `src/components/ConversionFunnelChart.tsx` — novo
+- `src/components/EngagementTrendChart.tsx` — novo
+- `src/components/TopSourcesPieChart.tsx` — novo
+- `src/components/InactiveClientsList.tsx` — novo
+- `src/components/RetentionCohortHeatmap.tsx` — novo
