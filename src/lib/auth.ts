@@ -26,3 +26,15 @@ export async function logout() {
     window.location.href = '/auth/login';
   }
 }
+
+export async function refreshToken(): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/auth/refresh`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}

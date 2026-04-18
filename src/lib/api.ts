@@ -1,4 +1,10 @@
+import { refreshToken } from './auth';
+
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+async function doFetch(url: string, options: RequestInit) {
+  return fetch(url, { ...options, credentials: "include", cache: "no-store" });
+}
 
 export async function apiFetch(
   path: string,
@@ -19,13 +25,23 @@ export async function apiFetch(
     headers["Content-Type"] = "application/json";
   }
 
-  const res = await fetch(url, {
+  const options: RequestInit = {
     method,
     headers,
-    credentials: "include",
     body: body && !(body instanceof FormData) ? JSON.stringify(body) : body,
-    cache: "no-store",
-  });
+  };
+
+  let res = await doFetch(url, options);
+
+  if (res.status === 401) {
+    const refreshed = await refreshToken();
+    if (refreshed) {
+      res = await doFetch(url, options);
+    } else {
+      if (typeof window !== 'undefined') window.location.href = '/auth/login';
+      throw new Error('Sessão expirada');
+    }
+  }
 
   if (!res.ok) {
     const errorText = await res.text();
