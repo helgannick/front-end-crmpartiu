@@ -1,5 +1,7 @@
 import { useMemo, useRef, useState, useEffect } from "react";
 import { apiFetch } from "@/lib/api";
+import { MAJOR_CITIES } from "@/lib/cities";
+import { getCachedCities, setCachedCities, clearCitiesCache } from "@/lib/cityCache";
 
 interface Genre { id: string; name: string; }
 const currentYear = new Date().getFullYear();
@@ -13,6 +15,7 @@ export function usePublicRegister() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const allCitiesRef = useRef<string[]>([]);
+  const [citySource, setCitySource] = useState<'static' | 'cache' | 'api' | null>(null);
   const [phone, setPhone] = useState("");
   const [birth, setBirth] = useState("");
   const [birthdayDay, setBirthdayDay] = useState("");
@@ -45,9 +48,18 @@ useEffect(() => {
 }, []);
 
   useEffect(() => {
+    const cached = getCachedCities();
+    if (cached) {
+      allCitiesRef.current = cached;
+      return;
+    }
     fetch("https://servicodados.ibge.gov.br/api/v1/localidades/municipios?orderBy=nome")
       .then((r) => r.json())
-      .then((data) => { allCitiesRef.current = data.map((m: { nome: string }) => m.nome); })
+      .then((data: { nome: string }[]) => {
+        const names = data.map((m) => m.nome);
+        allCitiesRef.current = names;
+        setCachedCities(names);
+      })
       .catch(console.error);
   }, []);
 
@@ -137,19 +149,68 @@ useEffect(() => {
     setMusicGenres((prev) => prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id]);
   }
 
+  function normalize(s: string) {
+    return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  }
+
   function handleCityChange(e: React.ChangeEvent<HTMLInputElement>) {
     const value = e.target.value;
     setCity(value); setCityValid(false);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (value.length < 2) { setCitySuggestions([]); setShowSuggestions(false); return; }
+    if (value.length < 2) { setCitySuggestions([]); setShowSuggestions(false); setCitySource(null); return; }
+
     debounceRef.current = setTimeout(() => {
-      const query = value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      const filtered = allCitiesRef.current
-        .filter((nome) => nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(query))
-        .slice(0, 8);
-      setCitySuggestions(filtered);
-      setShowSuggestions(filtered.length > 0);
-    }, 150);
+      const query = normalize(value);
+
+      // 1. Lista estática de cidades principais — retorno instantâneo
+      const staticResults = MAJOR_CITIES
+        .filter((c) => normalize(c.nome).includes(query))
+        .map((c) => c.nome);
+
+      if (staticResults.length > 0) {
+        setCitySuggestions(staticResults.slice(0, 8));
+        setShowSuggestions(true);
+        setCitySource('static');
+        return;
+      }
+
+      // 2. Cache completo em memória (populado do localStorage ou da API)
+      if (allCitiesRef.current.length > 0) {
+        const cacheResults = allCitiesRef.current
+          .filter((nome) => normalize(nome).includes(query))
+          .slice(0, 8);
+        setCitySuggestions(cacheResults);
+        setShowSuggestions(cacheResults.length > 0);
+        setCitySource('cache');
+        return;
+      }
+
+      // 3. Fallback: API IBGE (só chega aqui se o cache ainda não carregou)
+      fetch("https://servicodados.ibge.gov.br/api/v1/localidades/municipios?orderBy=nome")
+        .then((r) => r.json())
+        .then((data: { nome: string }[]) => {
+          const names = data.map((m) => m.nome);
+          allCitiesRef.current = names;
+          setCachedCities(names);
+          const apiResults = names.filter((nome) => normalize(nome).includes(query)).slice(0, 8);
+          setCitySuggestions(apiResults);
+          setShowSuggestions(apiResults.length > 0);
+          setCitySource('api');
+        })
+        .catch(() => {
+          // API falhou: tenta ao menos retornar da lista estática
+          const fallback = MAJOR_CITIES.filter((c) => normalize(c.nome).includes(query)).map((c) => c.nome);
+          setCitySuggestions(fallback.slice(0, 8));
+          setShowSuggestions(fallback.length > 0);
+          setCitySource('static');
+        });
+    }, 300);
+  }
+
+  function handleRefreshCityCache() {
+    clearCitiesCache();
+    allCitiesRef.current = [];
+    setCitySource(null);
   }
 
   function selectCity(nome: string) {
@@ -174,5 +235,6 @@ useEffect(() => {
     genresList, loading, showModal, setShowModal, errorMessage,
     register, handleBirthChange, handlePhoneChange,
     toggleGenre, handleCityChange, selectCity, handleCityBlur,
+    citySource, handleRefreshCityCache,
   };
 }

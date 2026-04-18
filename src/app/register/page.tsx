@@ -47,7 +47,8 @@ export default function PublicRegister() {
 
               <CityAutocomplete value={f.city} valid={f.cityValid} suggestions={f.citySuggestions}
                 showSuggestions={f.showSuggestions} onChange={f.handleCityChange}
-                onBlur={f.handleCityBlur} onSelect={f.selectCity} />
+                onBlur={f.handleCityBlur} onSelect={f.selectCity}
+                cacheSource={f.citySource} onRefreshCache={f.handleRefreshCityCache} />
 
               <input className={INPUT} placeholder="E-mail" type="email" value={f.email}
                 onChange={(e) => f.setEmail(e.target.value)} required aria-label="Email" />
