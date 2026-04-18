@@ -1,26 +1,20 @@
 "use client";
 
-import { supabase } from "@/lib/supabaseClient";
 import { LogOut, Loader2 } from "lucide-react";
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { clearToken } from "@/lib/auth";
-import { useRouter, usePathname } from "next/navigation";
+import { logout } from "@/lib/auth";
+import { usePathname } from "next/navigation";
 
 export default function Header() {
-  const router = useRouter();
   const pathname = usePathname();
   const [loggingOut, setLoggingOut] = useState(false);
 
-
-
   async function handleLogout() {
-  setLoggingOut(true);
-  await supabase.auth.signOut()
-  clearToken();
-  router.push("/auth/login");
-}
+    setLoggingOut(true);
+    await logout();
+  }
   return (
     <header
       className="

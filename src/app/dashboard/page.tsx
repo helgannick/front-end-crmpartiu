@@ -6,7 +6,6 @@ import type { BirthdayClient, Client } from "../../../@/types/client";
 import { useEffect, useState } from "react";
 import Protected from "@/lib/protected";
 import apiFetch from "@/lib/api";
-import { getToken } from "@/lib/auth";
 
 import Header from "@/components/Header";
 import DashboardCards from "@/components/DashboardCards";
@@ -51,16 +50,14 @@ export default function Dashboard() {
 
   const loadStats = async () => {
     try {
-      const token = getToken();
-
       const results = await Promise.allSettled([
-        apiFetch("/dashboard/total", { token }),
-        apiFetch("/dashboard/week", { token }),
-        apiFetch("/dashboard/month", { token }),
-        apiFetch("/dashboard/birthdays", { token }),
-        apiFetch("/dashboard/recent", { token }),
-        apiFetch("/dashboard/status", { token }),
-        apiFetch("/dashboard/clients-by-city", { token }),
+        apiFetch("/dashboard/total"),
+        apiFetch("/dashboard/week"),
+        apiFetch("/dashboard/month"),
+        apiFetch("/dashboard/birthdays"),
+        apiFetch("/dashboard/recent"),
+        apiFetch("/dashboard/status"),
+        apiFetch("/dashboard/clients-by-city"),
       ]);
 
       const [

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Protected from "@/lib/protected";
-import { getToken } from "@/lib/auth";
 import apiFetch from "@/lib/api";
 import Header from "@/components/Header";
 import ClientModal, { Client } from "@/components/ClientModal";
@@ -21,11 +20,9 @@ export default function ClientsPage() {
   async function loadClients() {
     try {
       setLoading(true);
-      const token = getToken();
 
       const res = await apiFetch(
-        `/clients?search=${search}&page=${page}&limit=${limit}`,
-        { token }
+        `/clients?search=${search}&page=${page}&limit=${limit}`
       );
 
       setClients(res.data || []);

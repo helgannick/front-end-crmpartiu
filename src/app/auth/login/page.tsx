@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { supabase } from "@/lib/supabaseClient";
-import { setToken } from "@/lib/auth";
+import { login as authLogin } from "@/lib/auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -18,17 +17,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-      if (!data.session) throw new Error("Sessão não criada");
-
-      // 👉 salva token (usado pelo backend)
-      setToken(data.session.access_token);
-
+      await authLogin(email, password);
       router.push("/dashboard");
     } catch (err: any) {
       alert(err.message || "Erro ao fazer login");
