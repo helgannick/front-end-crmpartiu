@@ -129,3 +129,23 @@ useAuthRefresh (a cada 50 min) → refreshToken() →
 - `src/hooks/useAuthRefresh.ts` — novo
 - `src/components/ClientProviders.tsx` — novo
 - `src/app/layout.tsx` — usa ClientProviders
+
+---
+
+### 2026-04-18 — Cache local para autocomplete de cidades
+
+**Problema:** Cada keystroke disparava uma query na lista completa do IBGE; sem fallback se a API caísse.
+
+**Solução — estratégia cache-first em 3 camadas:**
+1. **Lista estática** (`lib/cities.ts`) — 100 cidades principais, retorno <10ms, sempre disponível offline
+2. **Cache localStorage** (`lib/cityCache.ts`) — lista completa do IBGE armazenada por 7 dias; `clearCitiesCache()` para forçar atualização
+3. **API IBGE** — chamada apenas na primeira vez (sem cache) ou ao clicar em "Atualizar lista"
+
+`CityAutocomplete` exibe badge com a fonte (`lista local` / `cache` / `IBGE`) e botão "Atualizar lista" quando servindo do cache.
+
+**Arquivos criados/alterados:**
+- `src/lib/cities.ts` — novo (100 cidades estáticas)
+- `src/lib/cityCache.ts` — novo (get/set/clear com TTL de 7 dias)
+- `src/hooks/usePublicRegister.ts` — lógica cache-first substituindo fetch direto
+- `src/components/CityAutocomplete.tsx` — props `cacheSource` e `onRefreshCache`
+- `src/app/register/page.tsx` — passa novos props ao componente
