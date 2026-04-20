@@ -96,21 +96,20 @@ useEffect(() => {
     if (!normalized) return;
     setLoading(true);
     try {
-      await apiFetch("/public/register", {
-        method: "POST",
-        body: {
-          name, email, city, phone,
-          birth_date: `${normalized.year}-${normalized.month}-${normalized.day}`,
-          Instagram: instagramHandle ? [instagramHandle] : [],
-          lead_source: leadSource || null,
-          favorite_event: favoriteEvent || null,
-          last_event: lastEvent || null,
-          bought_with_partiu: boughtBoolean,
-          music_genres: musicGenres,
-          music_genre_other: musicGenreOther || null,
-          gender: gender || null,
-        },
-      });
+      const body: Record<string, unknown> = {
+        name, email, city, phone,
+        birth_date: `${normalized.year}-${normalized.month}-${normalized.day}`,
+        bought_with_partiu: boughtBoolean,
+        music_genres: musicGenres,
+      };
+      if (instagramHandle) body.Instagram = [instagramHandle];
+      if (leadSource) body.lead_source = leadSource;
+      if (favoriteEvent) body.favorite_event = favoriteEvent;
+      if (lastEvent) body.last_event = lastEvent;
+      if (musicGenreOther) body.music_genre_other = musicGenreOther;
+      if (gender) body.gender = gender;
+
+      await apiFetch("/public/register", { method: "POST", body });
       resetForm();
       setShowModal(true);
     } catch (err: unknown) {

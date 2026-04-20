@@ -52,7 +52,8 @@ export async function apiFetch(
       parsed = errorText;
     }
 
-    throw new Error(parsed.message || parsed.error || "Erro na API");
+    const details = parsed.details?.map((d: any) => `${d.field}: ${d.message}`).join("; ");
+    throw new Error(details || parsed.message || parsed.error || "Erro na API");
   }
 
   if (res.status === 204) return null;

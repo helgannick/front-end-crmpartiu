@@ -4,11 +4,11 @@ export interface NormalizedClient {
   name: string;
   email: string;
   phone: string;
-  city: string;
-  gender: "Masculino" | "Feminino" | null;
-  instagram: string;
-  birth_date: string | null;
-  lead_source: string;
+  city?: string;
+  gender?: "Masculino" | "Feminino";
+  instagram?: string;
+  birth_date?: string;
+  lead_source?: string;
   bought_with_partiu: boolean;
 }
 
@@ -144,9 +144,9 @@ export function normalizeClients(rows: RawRow[]): NormalizeResult {
     }
 
     const rawGender = pick(row, "genero", "gênero", "gender", "sexo");
-    const gender = rawGender ? normalizeGender(rawGender) : null;
+    const gender = rawGender ? normalizeGender(rawGender) : undefined;
 
-    const birth_date = normalizeBirthDate(row);
+    const birth_date = normalizeBirthDate(row) ?? undefined;
 
     const rawBought = pick(
       row,
@@ -154,15 +154,25 @@ export function normalizeClients(rows: RawRow[]): NormalizeResult {
     );
     const bought_with_partiu = rawBought ? normalizeBool(rawBought) : false;
 
+    const cleanPhone = phone.replace(/\D/g, "");
+    if (!/^\d{10,11}$/.test(cleanPhone)) {
+      invalid.push({ row, reason: `Telefone inválido: "${phone}" (precisa ter 10 ou 11 dígitos)` });
+      continue;
+    }
+
+    const city = pick(row, "cidade", "city", "municipio", "município") || undefined;
+    const instagram = pick(row, "instagram", "insta", "ig") || undefined;
+    const lead_source = pick(row, "origem", "lead_source", "fonte", "source") || undefined;
+
     valid.push({
       name,
       email,
-      phone,
-      city: pick(row, "cidade", "city", "municipio", "município"),
-      gender,
-      instagram: pick(row, "instagram", "insta", "ig"),
-      birth_date,
-      lead_source: pick(row, "origem", "lead_source", "fonte", "source"),
+      phone: cleanPhone,
+      ...(city && { city }),
+      ...(gender && { gender }),
+      ...(instagram && { instagram }),
+      ...(birth_date && { birth_date }),
+      ...(lead_source && { lead_source }),
       bought_with_partiu,
     });
   }
