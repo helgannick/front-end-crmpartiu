@@ -18,10 +18,11 @@ import EngagementTrendChart from "@/components/EngagementTrendChart";
 import TopSourcesPieChart from "@/components/TopSourcesPieChart";
 import InactiveClientsList from "@/components/InactiveClientsList";
 import RetentionCohortHeatmap from "@/components/RetentionCohortHeatmap";
+import BirthdayPanel from "@/components/BirthdayPanel";
 
 interface CityStats { city: string; total: number; }
 
-const TABS = ["Visão Geral", "Conversão", "Engajamento", "Retenção"] as const;
+const TABS = ["Visão Geral", "Aniversários", "Conversão", "Engajamento", "Retenção"] as const;
 type Tab = typeof TABS[number];
 
 const PERIOD_OPTIONS = [
@@ -175,8 +176,11 @@ export default function Dashboard() {
               </>
             )}
 
+            {/* ── TAB: Aniversários ── */}
+            {activeTab === "Aniversários" && <BirthdayPanel />}
+
             {/* ── TABS AVANÇADAS ── */}
-            {activeTab !== "Visão Geral" && (
+            {activeTab !== "Visão Geral" && activeTab !== "Aniversários" && (
               <>
                 {/* Filtro de período para inativos */}
                 {activeTab === "Engajamento" && (
