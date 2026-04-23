@@ -175,6 +175,5 @@ birthday_converted_year?: number | null; // ano em que converteu pelo aniversár
 
 ## Próximos passos pendentes
 
-1. **Tela de aniversariantes** — painel D-7/D-0, status de envios, conversões
-2. **Histórico de mensagens** — na ficha do cliente, consumindo `message_logs` do backend
-3. **Templates editáveis** — interface para editar prompts de mensagem
+1. **Histórico de mensagens** — na ficha do cliente, consumindo `message_logs` do backend
+2. **Templates editáveis** — interface para editar prompts de mensagem
