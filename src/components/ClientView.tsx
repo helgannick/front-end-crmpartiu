@@ -14,6 +14,7 @@ type Client = {
   favorite_event?: { id: string; name: string } | string | null; // ← aqui
   last_event?: { id: string; name: string } | string | null;     // ← aqui
   bought_with_partiu?: boolean | null;
+  birthday_converted_year?: number | null;
   music_genres?: string[] | null;
   music_genre_other?: string | null;
   gender?: "Masculino" | "Feminino" | string | null;
@@ -36,6 +37,9 @@ export default function ClientView({
   onDeleted: () => void;
 }) {
   const [deleting, setDeleting] = useState(false);
+  const [converting, setConverting] = useState(false);
+  const currentYear = new Date().getFullYear();
+  const [converted, setConverted] = useState(client.birthday_converted_year === currentYear);
 
   const formattedBirthday = client.birth_date
     ? new Date(client.birth_date).toLocaleDateString("pt-BR")
@@ -55,6 +59,21 @@ export default function ClientView({
   {typeof client.contacted === "boolean" && (
   <p>{client.contacted ? "✅ Contactado" : "⬜ Não contactado"}</p>
 )}
+
+  async function handleConvert() {
+    if (converted) return;
+    const ok = window.confirm(`Marcar "${client.name}" como convertido?`);
+    if (!ok) return;
+    try {
+      setConverting(true);
+      await apiFetch(`/api/birthday/${client.id}/convert`, { method: "POST" });
+      setConverted(true);
+    } catch (err: any) {
+      alert(err?.message || "Erro ao marcar conversão");
+    } finally {
+      setConverting(false);
+    }
+  }
 
   async function handleDelete() {
     const confirmDelete = window.confirm(
@@ -95,11 +114,16 @@ export default function ClientView({
           <p>🎫 Último evento: {toLabel(client.last_event)}</p>
         )}
         {typeof client.bought_with_partiu === "boolean" && (
-          <p>
-            ✅ Já comprou com a PARTIU:{" "}
-            {client.bought_with_partiu ? "SIM" : "NÃO"}
-          </p>
+          <p>🛒 Já comprou com a Partiu: {client.bought_with_partiu ? "SIM" : "NÃO"}</p>
         )}
+        <p>
+          🎂 Conversão aniversário:{" "}
+          {converted ? (
+            <span className="text-emerald-400 font-semibold">Convertido {currentYear} ✓</span>
+          ) : (
+            <span className="text-white/50">Não convertido</span>
+          )}
+        </p>
 
         {genresLabel && <p>🎵 Gêneros: {genresLabel}</p>}
 
@@ -143,6 +167,18 @@ export default function ClientView({
           {deleting ? "Excluindo..." : "Excluir"}
         </button>
       </div>
+
+      <button
+        onClick={handleConvert}
+        disabled={converted || converting}
+        className={`w-full mt-3 rounded-lg px-4 py-2 text-sm font-semibold transition ${
+          converted
+            ? "bg-emerald-500/30 text-emerald-300 cursor-default"
+            : "bg-emerald-500/80 hover:bg-emerald-500 disabled:opacity-50"
+        }`}
+      >
+        {converting ? "Salvando..." : converted ? "✓ Já convertido" : "Marcar como convertido"}
+      </button>
     </>
   );
 }
