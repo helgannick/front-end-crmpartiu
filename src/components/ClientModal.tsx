@@ -3,6 +3,7 @@
 import { useState } from "react";
 import ClientView from "./ClientView";
 import ClientEditForm from "./ClientEditForm";
+import ClientMessageHistory from "./ClientMessageHistory";
 
 export type Client = {
   id: string;
@@ -27,8 +28,11 @@ type ClientModalProps = {
   onUpdated?: () => void;
 };
 
+type ModalTab = "dados" | "historico";
+
 export default function ClientModal({ client, onClose, onUpdated }: ClientModalProps) {
   const [editing, setEditing] = useState(false);
+  const [activeTab, setActiveTab] = useState<ModalTab>("dados");
 
   if (!client) return null;
 
@@ -65,21 +69,41 @@ export default function ClientModal({ client, onClose, onUpdated }: ClientModalP
           </button>
         </div>
 
+        {/* Abas — só visível fora do modo edição */}
+        {!editing && (
+          <div className="flex gap-1 px-6 pt-3 pb-0">
+            {(["dados", "historico"] as ModalTab[]).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                  activeTab === tab ? "bg-white/20 text-white" : "text-white/50 hover:text-white/80"
+                }`}
+              >
+                {tab === "dados" ? "Dados" : "Histórico"}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Body (scroll) */}
         <div className="px-6 py-4 overflow-y-auto">
           {!editing ? (
-            <ClientView
-              client={client}
-              onEdit={() => setEditing(true)}
-              onDeleted={() => {
-                onUpdated?.();
-                onClose();
-              }}
-            />
+            activeTab === "dados" ? (
+              <ClientView
+                client={client}
+                onEdit={() => setEditing(true)}
+                onDeleted={() => {
+                  onUpdated?.();
+                  onClose();
+                }}
+              />
+            ) : (
+              <ClientMessageHistory clientId={client.id} />
+            )
           ) : (
             <ClientEditForm
               client={client}
-              // ✅ agora os botões ficam no footer, então:
               hideActions
               onCancel={() => setEditing(false)}
               onSaved={() => {
