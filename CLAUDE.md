@@ -167,6 +167,12 @@ Botões de ação existentes:
 - **Excluir** — com confirmação
 - **Marcar como convertido** — chama `POST /api/birthday/:clientId/convert`, desabilita após conversão, mostra "✓ Já convertido" em verde
 
+## Tipo Client — campos adicionados
+
+```typescript
+birthday_converted_year?: number | null; // ano em que converteu pelo aniversário
+```
+
 ## Próximos passos pendentes
 
 1. **Tela de aniversariantes** — painel D-7/D-0, status de envios, conversões
