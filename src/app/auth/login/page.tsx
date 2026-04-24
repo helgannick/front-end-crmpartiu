@@ -11,16 +11,22 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   async function login(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
+    setError("");
 
     try {
       await authLogin(email, password);
       router.push("/dashboard");
     } catch (err: any) {
-      alert(err.message || "Erro ao fazer login");
+      const msg =
+        err.message === "Failed to fetch"
+          ? "Servidor indisponível. Tente novamente em instantes."
+          : err.message || "Erro ao fazer login";
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -76,6 +82,12 @@ export default function LoginPage() {
               "
               required
             />
+
+            {error && (
+              <p className="text-red-400 text-sm text-center bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2">
+                {error}
+              </p>
+            )}
 
             <button
               type="submit"
