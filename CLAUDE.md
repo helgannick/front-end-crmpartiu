@@ -1,5 +1,14 @@
 # CRM Partiu Pra Boa — Frontend
 
+## Regras de desenvolvimento
+
+> **TESTAR ANTES DE COMMITAR — OBRIGATÓRIO**
+> Antes de qualquer `git commit` ou `git push`:
+> 1. Rodar `npm run dev` e confirmar que compila sem erros no log
+> 2. Abrir a página modificada no browser e verificar o comportamento
+> 3. Corrigir qualquer erro de TypeScript, compilação ou runtime antes de commitar
+> Nunca subir código sem validação local.
+
 ## Stack
 - **Framework:** Next.js 16 (App Router)
 - **Linguagem:** TypeScript 5
