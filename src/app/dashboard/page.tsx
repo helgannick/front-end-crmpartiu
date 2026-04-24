@@ -19,6 +19,7 @@ import TopSourcesPieChart from "@/components/TopSourcesPieChart";
 import InactiveClientsList from "@/components/InactiveClientsList";
 import RetentionCohortHeatmap from "@/components/RetentionCohortHeatmap";
 import BirthdayPanel from "@/components/BirthdayPanel";
+import HotLeadsList from "@/components/HotLeadsList";
 
 interface CityStats { city: string; total: number; }
 
@@ -47,6 +48,7 @@ export default function Dashboard() {
   });
   const [clientsByCity, setClientsByCity] = useState<CityStats[]>([]);
 
+  const [hotLeads, setHotLeads] = useState<any[]>([]);
   const [funnel, setFunnel] = useState<any>(null);
   const [trends, setTrends] = useState<any[]>([]);
   const [sources, setSources] = useState<any[]>([]);
@@ -63,9 +65,10 @@ export default function Dashboard() {
         apiFetch("/dashboard/recent"),
         apiFetch("/dashboard/status"),
         apiFetch("/dashboard/clients-by-city"),
+        apiFetch("/dashboard/hot-leads"),
       ]);
 
-      const [total, weekly, monthly, birthdays, recent, status, byCity] =
+      const [total, weekly, monthly, birthdays, recent, status, byCity, hotLeadsData] =
         results.map((r) => r.status === "fulfilled" ? r.value : null);
 
       setStats({
@@ -84,6 +87,7 @@ export default function Dashboard() {
         return [];
       })();
       setClientsByCity(normalizedByCity);
+      setHotLeads(Array.isArray(hotLeadsData) ? hotLeadsData : []);
     } catch (err) {
       console.error("Erro ao carregar dashboard:", err);
     } finally {
@@ -172,6 +176,7 @@ export default function Dashboard() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                   <ClientsByCityChart data={clientsByCity} />
+                  <HotLeadsList leads={hotLeads} />
                 </div>
               </>
             )}
