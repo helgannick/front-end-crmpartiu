@@ -168,11 +168,20 @@ export default function Dashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
                   <DashboardCards total={stats.total} week={stats.weekly} month={stats.monthly} />
                 </div>
-                <DashboardQuickStats active={stats.active} inactive={stats.inactive}
-                  birthdays={stats.birthdays.length} recent={stats.recent.length} />
+                <DashboardQuickStats
+                  active={stats.active}
+                  inactive={stats.inactive}
+                  birthdays={stats.birthdays.length}
+                  recent={stats.recent.length}
+                  onInactiveClick={() => setActiveTab("Engajamento")}
+                  onBirthdaysClick={() => setActiveTab("Aniversários")}
+                  onRecentClick={() =>
+                    document.getElementById("recent-clients")?.scrollIntoView({ behavior: "smooth" })
+                  }
+                />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                   <BirthdayList clients={stats.birthdays} onUpdated={loadStats} />
-                  <RecentClients clients={stats.recent} />
+                  <div id="recent-clients"><RecentClients clients={stats.recent} /></div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                   <ClientsByCityChart data={clientsByCity} />
