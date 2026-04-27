@@ -148,6 +148,11 @@ export function normalizeClients(rows: RawRow[]): NormalizeResult {
 
     const birth_date = normalizeBirthDate(row) ?? undefined;
 
+    if (birth_date && birth_date > new Date().toISOString().split('T')[0]) {
+      invalid.push({ row, reason: `Data de nascimento no futuro: "${birth_date}"` });
+      continue;
+    }
+
     const rawBought = pick(
       row,
       "comprou_partiu", "bought_with_partiu", "comprou", "partiu", "comprou_com_partiu"
