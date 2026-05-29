@@ -2,7 +2,7 @@
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 
-const WHATSAPP_URL = "https://chat.whatsapp.com/JwQgbVJuz3k1H95Rz4yxcC";
+const WHATSAPP_URL = "https://links.partiupraboa.com/PartiuGrupos";
 
 interface Props { show: boolean; onClose: () => void; }
 
@@ -23,11 +23,11 @@ export function SuccessModal({ show, onClose }: Props) {
               </div>
               <h3 className="text-lg font-semibold text-center">🎉 Cadastro realizado</h3>
               <p className="text-center text-sm text-gray-700">
-                🎖️ Agora você pode fazer parte do grupo EXCLUSIVO de COMPRA & VENDAS da Partiu.<br />Obrigado!
+                ✨ Obrigado por se cadastrar, assim você nos ajuda quem está nos nossos grupos, com isso diminuindo a chance de golpe!
               </p>
               <a href={WHATSAPP_URL} target="_blank" rel="noreferrer"
                 className="mt-4 w-full inline-flex items-center justify-center px-4 py-4 rounded-xl bg-[#25D366] hover:bg-[#1ebe5d] text-white font-bold text-lg shadow-lg transition-all">
-                Entrar no Grupo!
+                🚀 Faça parte agora dos nossos grupos.
               </a>
               <button className="mt-3 text-sm underline text-gray-800" onClick={onClose}>Fechar</button>
             </div>
