@@ -164,6 +164,7 @@ interface Client {
 | `GET /dashboard/birthdays` | BirthdayList |
 | `GET /dashboard/clients-by-city` | ClientsByCityChart |
 | `GET /music-genres` | ClientCreateModal, ClientEditForm |
+| `POST /public/register` | usePublicRegister (cadastro público) |
 
 ## Componente ClientView — estado atual
 
@@ -181,6 +182,53 @@ Botões de ação existentes:
 ```typescript
 birthday_converted_year?: number | null; // ano em que converteu pelo aniversário
 ```
+
+## Cadastro público (`/register`) — estado atual
+
+Formulário em `src/app/register/page.tsx`, lógica em `src/hooks/usePublicRegister.ts`.
+
+**Gêneros musicais — lista fixa (não vem de `GET /music-genres`)**
+
+O cadastro público usa uma lista *hardcoded* de 6 opções em `usePublicRegister.ts`.
+O campo livre "Outros" foi removido (junto com o state `musicGenreOther` e o envio de
+`music_genre_other`).
+
+| Rótulo exibido | Valor enviado (`music_genres[]`) |
+|----------------|----------------------------------|
+| Samba | `Samba` |
+| Pagode | `Pagode` |
+| Musica Eletronica | `Eletrônico` |
+| Sertanejo | `Sertanejo` |
+| Rap / Trap / HipHop | `Rap / Trap / HipHop` |
+| Funk | `Funk` |
+
+**Why:** o backend resolve `music_genres` por nome (`ilike` em `music_genres`) e cria a
+linha se não existir. Por isso "Musica Eletronica" envia `Eletrônico` — o nome que já
+existe no seed — para não duplicar o gênero nas analytics. `Rap / Trap / HipHop` não tem
+equivalente no seed e é criado como gênero novo no primeiro cadastro.
+
+**How to apply:** para mudar as opções do formulário público, editar `genresList` no hook —
+não o endpoint. As telas autenticadas (ClientCreateModal / ClientEditForm) continuam usando
+`GET /music-genres` com a lista completa.
+
+**Gênero**
+
+Opções: Feminino, Masculino, **Não Quero Identificar** — gravadas com o texto literal.
+
+Valores aceitos em `clients.gender`: `Masculino` | `Feminino` | `Outro` | `Não Quero Identificar`
+(migration `007_gender_nao_quero_identificar.sql` no backend).
+
+`Outro` é legado — nenhuma tela oferece esse valor. `ClientEditForm` só renderiza a opção
+`Outro` quando o cliente carregado já tem esse valor, para que abrir e salvar a ficha de um
+cadastro antigo não apague o gênero silenciosamente.
+
+**Atenção:** a importação Excel/CSV (`normalizeClients.ts` → `normalizeGender`) reconhece
+apenas variações de Masculino/Feminino; qualquer outro texto na planilha vira `undefined`.
+
+**Cidade**
+
+Placeholder: `(Escreva a cidade e seleciona na lista)` — em `CityAutocomplete.tsx`
+(componente usado só nesta página).
 
 ## Próximos passos pendentes
 

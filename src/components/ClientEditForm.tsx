@@ -164,8 +164,11 @@ export default function ClientEditForm({
         className="w-full rounded-lg bg-black/30 border border-white/10 p-2 text-white"
       >
         <option value="">Gênero (opcional)</option>
-        <option value="Masculino">Masculino</option>
         <option value="Feminino">Feminino</option>
+        <option value="Masculino">Masculino</option>
+        <option value="Não Quero Identificar">Não Quero Identificar</option>
+        {/* legado: cadastros anteriores à migration 007 gravavam 'Outro' */}
+        {form.gender === "Outro" && <option value="Outro">Outro</option>}
       </select>
 
       {/* Origem do lead */}

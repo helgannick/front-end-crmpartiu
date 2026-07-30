@@ -277,8 +277,9 @@ export default function ClientCreateModal({ onClose, onCreated }: Props) {
             onChange={(e) => setForm({ ...form, gender: e.target.value })}
           >
             <option value="">Gênero</option>
-            <option value="Masculino">Masculino</option>
             <option value="Feminino">Feminino</option>
+            <option value="Masculino">Masculino</option>
+            <option value="Não Quero Identificar">Não Quero Identificar</option>
           </select>
 
           <div className="grid grid-cols-3 gap-2">

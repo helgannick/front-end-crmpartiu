@@ -22,7 +22,7 @@ export function CityAutocomplete({ value, valid, suggestions, showSuggestions, o
         className={`w-full p-3 rounded-xl bg-white/10 border backdrop-blur-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 transition-all ${
           valid ? "border-emerald-500 focus:ring-emerald-500/30" : "border-white/20 focus:ring-white/30"
         }`}
-        placeholder="Cidade (selecione da lista)"
+        placeholder="(Escreva a cidade e seleciona na lista)"
         type="text" value={value} onChange={onChange} onBlur={onBlur}
         required autoComplete="off" aria-label="Cidade"
       />

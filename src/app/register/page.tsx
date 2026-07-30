@@ -59,8 +59,9 @@ export default function PublicRegister() {
               <div className="grid grid-cols-2 gap-3">
                 <select className={SELECT} value={f.gender} onChange={(e) => f.setGender(e.target.value)}>
                   <option value="" className="bg-[#0a0a23]">Gênero</option>
-                  <option value="Masculino" className="bg-[#0a0a23]">Masculino</option>
                   <option value="Feminino" className="bg-[#0a0a23]">Feminino</option>
+                  <option value="Masculino" className="bg-[#0a0a23]">Masculino</option>
+                  <option value="Não Quero Identificar" className="bg-[#0a0a23]">Não Quero Identificar</option>
                 </select>
                 <select className={SELECT} value={f.boughtWithPartiu} onChange={(e) => f.setBoughtWithPartiu(e.target.value)}>
                   <option value="NAO" className="bg-[#0a0a23]">Já comprou com a PARTIU?</option>
@@ -90,8 +91,6 @@ export default function PublicRegister() {
                     );
                   })}
                 </div>
-                <input className="mt-3 w-full p-3 rounded-xl bg-white/10 border border-white/20 backdrop-blur-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30 transition-all"
-                  placeholder="Outros" value={f.musicGenreOther} onChange={(e) => f.setMusicGenreOther(e.target.value)} />
               </div>
 
               <input className={INPUT} placeholder="Instagram (opcional)" value={f.instagramHandle}

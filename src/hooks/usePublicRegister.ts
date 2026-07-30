@@ -3,6 +3,8 @@ import { apiFetch } from "@/lib/api";
 import { MAJOR_CITIES } from "@/lib/cities";
 import { getCachedCities, setCachedCities, clearCitiesCache } from "@/lib/cityCache";
 
+// `id` é o valor enviado ao backend (resolvido por nome em music_genres),
+// `name` é o rótulo exibido no formulário público.
 interface Genre { id: string; name: string; }
 const currentYear = new Date().getFullYear();
 
@@ -28,24 +30,19 @@ export function usePublicRegister() {
   const [boughtWithPartiu, setBoughtWithPartiu] = useState("NAO");
   const [gender, setGender] = useState("");
   const [musicGenres, setMusicGenres] = useState<string[]>([]);
-  const [musicGenreOther, setMusicGenreOther] = useState("");
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const KNOWN_GENRES: Genre[] = [
-  { id: "eletr", name: "Eletrônico" },
-  { id: "funk",  name: "Funk" },
-  { id: "pagod", name: "Pagode" },
-  { id: "serta", name: "Sertanejo" },
-  { id: "trap",  name: "Trap" },
-];
-const [genresList, setGenresList] = useState<Genre[]>(KNOWN_GENRES);
 
-useEffect(() => {
-  apiFetch("/music-genres")
-    .then((data) => { if (data?.length) setGenresList(data); })
-    .catch(console.error);
-}, []);
+  // Lista fixa do cadastro público — não vem de /music-genres de propósito
+  const genresList: Genre[] = [
+    { id: "Samba",                name: "Samba" },
+    { id: "Pagode",               name: "Pagode" },
+    { id: "Eletrônico",           name: "Musica Eletronica" },
+    { id: "Sertanejo",            name: "Sertanejo" },
+    { id: "Rap / Trap / HipHop",  name: "Rap / Trap / HipHop" },
+    { id: "Funk",                 name: "Funk" },
+  ];
 
   useEffect(() => {
     const cached = getCachedCities();
@@ -70,7 +67,7 @@ useEffect(() => {
     setPhone(""); setBirth(""); setBirthdayDay(""); setBirthdayMonth("");
     setBirthdayYear(""); setInstagramHandle(""); setLeadSource("");
     setFavoriteEvent(""); setLastEvent(""); setBoughtWithPartiu("NAO");
-    setGender(""); setMusicGenres([]); setMusicGenreOther("");
+    setGender(""); setMusicGenres([]);
   }
 
   function validateAndNormalizeDate() {
@@ -106,7 +103,6 @@ useEffect(() => {
       if (leadSource) body.lead_source = leadSource;
       if (favoriteEvent) body.favorite_event = favoriteEvent;
       if (lastEvent) body.last_event = lastEvent;
-      if (musicGenreOther) body.music_genre_other = musicGenreOther;
       if (gender) body.gender = gender;
 
       await apiFetch("/public/register", { method: "POST", body });
@@ -230,8 +226,8 @@ useEffect(() => {
     boughtWithPartiu, setBoughtWithPartiu,
     favoriteEvent, setFavoriteEvent, lastEvent, setLastEvent,
     leadSource, setLeadSource, instagramHandle, setInstagramHandle,
-    musicGenres, musicGenreOther, setMusicGenreOther,
-    genresList, loading, showModal, setShowModal, errorMessage,
+    musicGenres, genresList,
+    loading, showModal, setShowModal, errorMessage,
     register, handleBirthChange, handlePhoneChange,
     toggleGenre, handleCityChange, selectCity, handleCityBlur,
     citySource, handleRefreshCityCache,
